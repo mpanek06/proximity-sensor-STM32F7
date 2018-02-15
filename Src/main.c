@@ -40,6 +40,8 @@
 #include "stm32f7xx_hal.h"
 
 /* USER CODE BEGIN Includes */
+#include "config.h"
+#include "prox_sensor.h"
 #include "stm32746g_discovery.h"
 #include "stm32746g_discovery_sdram.h"
 #include "ov9655.h"
@@ -104,6 +106,7 @@ static uint32_t CameraHwAddress;
 /* Image size */
 uint32_t Im_size = 0;
 
+uint16_t (*ptr)[320];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -140,6 +143,7 @@ void LCD_GPIO_Init(LTDC_HandleTypeDef *, void *);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+	ptr = FRAME_BUFFER;
 
   /* USER CODE END 1 */
 
@@ -172,16 +176,12 @@ int main(void)
   MX_I2C3_Init();
   /* USER CODE BEGIN 2 */
 
-  LTDC_Init(FRAME_BUFFER, 0, 0, 480, 272);
+  LTDC_Init(FRAME_BUFFER, 0, 0, CAM_IMG_WIDTH, CAM_IMG_HEIGHT);
   BSP_SDRAM_Init();
-  CAMERA_Init(CAMERA_R640x480);
+  CAMERA_Init(CAMERA_R320x240);
   //Delay for the camera to output correct data
-  HAL_Delay(1000);
-//  Im_size = 0x9600; //size=320*240*2/4
-  Im_size = 0x25800; //size=640*480*2/4
-  /* uncomment the following line in case of snapshot mode */
-  //HAL_DCMI_Start_DMA(&hdcmi, DCMI_MODE_SNAPSHOT, (uint32_t)FRAME_BUFFER, Im_size);
-  /* uncomment the following line in case of continuous mode */
+//  HAL_Delay(1000);
+  Im_size = CAM_IMG_WIDTH * CAM_IMG_HEIGHT * 2 / 4; //size=320*240*2/4
   HAL_DCMI_Start_DMA(&hdcmi, DCMI_MODE_CONTINUOUS , (uint32_t)FRAME_BUFFER, Im_size);
 
   /* USER CODE END 2 */
@@ -190,7 +190,16 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
+	  for(uint16_t y = 0; y < CAM_IMG_HEIGHT; ++y)
+	  {
+		  for(uint16_t x = 0; x < CAM_IMG_WIDTH; ++x)
+	  	  {
+			  if (((ptr[y][x] & RGB565_R_MSK) >> RGB565_R_POS) > 20)
+	  		  {
+	  			ptr[y][x] = 0xffff;
+	  		  }
+	  	  }
+	  }
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
@@ -1040,7 +1049,7 @@ static void LTDC_Init(uint32_t FB_Address, uint16_t Xpos, uint16_t Ypos, uint16_
 	hltdc.Instance = LTDC;
 	if(HAL_LTDC_GetState(&hltdc) == HAL_LTDC_STATE_RESET)
 	{
-	LCD_GPIO_Init(&hltdc, NULL);
+		LCD_GPIO_Init(&hltdc, NULL);
 	}
 	HAL_LTDC_Init(&hltdc);
 	/* Assert display enable LCD_DISP pin */

@@ -52,3 +52,6 @@ Mkfile.old
 dkms.conf
 
 Debug
+Release
+*.launch
+*language.settings.xml
