@@ -41,6 +41,7 @@
 
 /* USER CODE BEGIN Includes */
 #include "usb_device.h"
+#include "usbd_cdc_if.h"
 #include "config.h"
 #include "prox_sensor.h"
 #include "stm32746g_discovery.h"
@@ -97,7 +98,6 @@ static uint32_t CameraHwAddress;
 /* Image size */
 uint32_t Im_size = 0;
 
-uint16_t (*ptr)[320];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -129,7 +129,7 @@ void LCD_GPIO_Init(LTDC_HandleTypeDef *, void *);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	ptr = FRAME_BUFFER;
+
 
   /* USER CODE END 1 */
 
@@ -157,6 +157,7 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   MX_USB_DEVICE_Init();
+  ProxSensor_Init(FRAME_BUFFER);
 
   LTDC_Init(FRAME_BUFFER, 0, 0, CAM_IMG_WIDTH, CAM_IMG_HEIGHT);
   BSP_SDRAM_Init();
@@ -172,16 +173,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  for(uint16_t y = 0; y < CAM_IMG_HEIGHT; ++y)
-	  {
-		  for(uint16_t x = 0; x < CAM_IMG_WIDTH; ++x)
-	  	  {
-			  if (((ptr[y][x] & RGB565_R_MSK) >> RGB565_R_POS) > 20)
-	  		  {
-	  			ptr[y][x] = 0xffff;
-	  		  }
-	  	  }
-	  }
+	  ProxSensor_Perform();
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
