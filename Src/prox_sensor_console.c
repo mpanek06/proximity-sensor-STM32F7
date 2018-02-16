@@ -75,6 +75,8 @@ void ProxSensor_Console_CurrParams( char* arg )
 
 	sprintf(commandResponseBuff, "Current parameters of algorithm: %s", lineSeparator );
 
+	sprintf(commandResponseBuff, "%s Detected color: %d %s", commandResponseBuff, ProxSensor_Config.detectedColor, lineSeparator );
+
 	sprintf(commandResponseBuff, "%s Pixels R: %d %s", commandResponseBuff, ProxSensor_Config.numberOfPixels_R, lineSeparator );
 	sprintf(commandResponseBuff, "%s Pixels G: %d %s", commandResponseBuff, ProxSensor_Config.numberOfPixels_G, lineSeparator );
 	sprintf(commandResponseBuff, "%s Pixels B: %d %s", commandResponseBuff, ProxSensor_Config.numberOfPixels_B, lineSeparator );
@@ -83,7 +85,11 @@ void ProxSensor_Console_CurrParams( char* arg )
 	sprintf(commandResponseBuff, "%s BWTh G: %d %s", commandResponseBuff, ProxSensor_Config.BwTh_G, lineSeparator );
 	sprintf(commandResponseBuff, "%s BWTh B: %d %s", commandResponseBuff, ProxSensor_Config.BwTh_B, lineSeparator );
 
-	strcat( commandResponseBuff, lineSeparator );
+	sprintf(commandResponseBuff, "%s Grayscale coeff R: %d %s", commandResponseBuff, ProxSensor_Config.Grayscale_coeff_R, lineSeparator );
+	sprintf(commandResponseBuff, "%s Grayscale coeff G: %d %s", commandResponseBuff, ProxSensor_Config.Grayscale_coeff_G, lineSeparator );
+	sprintf(commandResponseBuff, "%s Grayscale coeff B: %d %s", commandResponseBuff, ProxSensor_Config.Grayscale_coeff_B, lineSeparator );
+
+	strcat(commandResponseBuff, lineSeparator);
 
 	sendStringToDiagTerminal( commandResponseBuff, strlen(commandResponseBuff) );
 }

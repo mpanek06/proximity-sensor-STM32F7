@@ -20,6 +20,13 @@
 #define RGB565_B_MSK 0b0000000000011111
 #define RGB565_B_POS 0
 
+#define RGB565_GET_R(PIXEL) (((PIXEL & RGB565_R_MSK) >> RGB565_R_POS))
+#define RGB565_GET_G(PIXEL) (((PIXEL & RGB565_G_MSK) >> RGB565_G_POS))
+#define RGB565_GET_B(PIXEL) (((PIXEL & RGB565_B_MSK) >> RGB565_B_POS))
+
+#define COLOR_BLACK 0x0000
+#define COLOR_WHITE 0xffff
+
 typedef enum
 {
 	ProxSensor_Color_R = 0,
@@ -43,6 +50,11 @@ typedef struct
 	uint8_t BwTh_R;
 	uint8_t BwTh_G;
 	uint8_t BwTh_B;
+
+	/* Threshold for image binarization */
+	uint8_t Grayscale_coeff_R;
+	uint8_t Grayscale_coeff_G;
+	uint8_t Grayscale_coeff_B;
 }ProxSensor_Config_T;
 
 ProxSensor_Config_T ProxSensor_Config;
