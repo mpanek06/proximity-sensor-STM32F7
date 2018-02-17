@@ -52,12 +52,10 @@ typedef struct
 	uint8_t BwTh_B;
 
 	/* Threshold for image binarization */
-	uint8_t Grayscale_coeff_R;
-	uint8_t Grayscale_coeff_G;
-	uint8_t Grayscale_coeff_B;
+	float Grayscale_coeff_R;
+	float Grayscale_coeff_G;
+	float Grayscale_coeff_B;
 }ProxSensor_Config_T;
-
-ProxSensor_Config_T ProxSensor_Config;
 
 void ProxSensor_Init(uint32_t frameBufferAddr);
 uint8_t ProxSensor_Perform();

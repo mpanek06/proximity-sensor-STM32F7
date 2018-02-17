@@ -23,6 +23,10 @@ typedef struct {
 	void (*optionCallback)( char* );
 }ProxSensor_CommandEntry_T;
 
+void ProxSensor_Console_SetBwTh_R( char* arg );
+void ProxSensor_Console_SetBwTh_G( char* arg );
+void ProxSensor_Console_SetBwTh_B( char* arg );
+
 void ProxSensor_Console_CurrParams( char* arg );
 void ProxSensor_Console_ShowHelp( char* arg );
 void ProxSensor_Console_RestartuC( char* arg );
@@ -30,6 +34,9 @@ void ProxSensor_Console_EnableOutputUSB( char* arg );
 
 ProxSensor_CommandEntry_T ProxSensor_consoleOptions[ PROX_SENSOR_NO_OF_OPTIONS ] =
 {
+		{ 'q', "BwTh_R",     	                ProxSensor_Console_SetBwTh_R },
+		{ '2', "BwTh_G",     	                ProxSensor_Console_SetBwTh_G },
+		{ '3', "BwTh_B",     	                ProxSensor_Console_SetBwTh_B },
 		{ 'a', "Sample option",	                                        NULL },
 		{ 'd', "Display current parameters",   ProxSensor_Console_CurrParams },
 		{ 'h', "Display this menu",              ProxSensor_Console_ShowHelp },
@@ -52,13 +59,13 @@ static char commandResponseBuff[ RESPONSE_BUFF_SIZE ];
 /* Buffer used by USB driver */
 extern uint8_t UserRxBufferFS[ MAX_COMMAND_SIZE ];
 
-extern ProxSensor_Config_T ProxSensor_Config;
+extern volatile ProxSensor_Config_T ProxSensor_Config;
 
 void ProxSensor_Console_Perform()
 {
 	if(RxClbkFlag)
 	{
-		if( isalpha( UserRxBufferFS[0] ) )
+//		if( isalpha( UserRxBufferFS[0] ) )
 		{
 			memset( command, 0, MAX_COMMAND_SIZE );
 			memcpy( command, UserRxBufferFS, MAX_COMMAND_SIZE );
@@ -67,6 +74,21 @@ void ProxSensor_Console_Perform()
 
 		RxClbkFlag = 0;
 	}
+}
+
+void ProxSensor_Console_SetBwTh_R( char* arg )
+{
+	ProxSensor_Config.BwTh_R = atoi(arg);
+}
+
+void ProxSensor_Console_SetBwTh_G( char* arg )
+{
+	ProxSensor_Config.BwTh_G = atoi(arg);
+}
+
+void ProxSensor_Console_SetBwTh_B( char* arg )
+{
+	ProxSensor_Config.BwTh_B = atoi(arg);
 }
 
 void ProxSensor_Console_CurrParams( char* arg )

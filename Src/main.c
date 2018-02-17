@@ -43,12 +43,14 @@
 #include "usb_device.h"
 #include "usbd_cdc_if.h"
 #include "config.h"
-#include "prox_sensor.h"
 #include "stm32746g_discovery.h"
 #include "stm32746g_discovery_sdram.h"
 #include "ov9655.h"
 #include "rk043fn48h.h"
 #include "fonts.h"
+
+#include "prox_sensor.h"
+#include "prox_sensor_console.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -173,6 +175,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  ProxSensor_Console_Perform();
 	  ProxSensor_Perform();
   /* USER CODE END WHILE */
 
@@ -284,7 +287,7 @@ static void MX_USART1_UART_Init(void)
 
   huart1.Instance = USART1;
   huart1.Init.BaudRate = 115200;
-  huart1.Init.WordLength = UART_WORDLENGTH_7B;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;
   huart1.Init.Mode = UART_MODE_TX_RX;
