@@ -36,7 +36,8 @@
 #include "stm32f7xx_it.h"
 
 /* USER CODE BEGIN 0 */
-
+extern UART_HandleTypeDef huart1;
+extern uint8_t UART_RxClbkFlag;
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -125,6 +126,20 @@ void DCMI_IRQHandler(void)
 }
 
 /* USER CODE BEGIN 1 */
+
+void USART1_IRQHandler(void)
+{
+	HAL_UART_IRQHandler(&huart1);
+}
+
+void HAL_UART_RxCpltCallback( UART_HandleTypeDef* huart )
+{
+	if( USART1 == huart->Instance )
+	{
+		UART_RxClbkFlag = 1;
+	}
+}
+
 
 /**
 * @brief This function handles USB On The Go FS global interrupt.

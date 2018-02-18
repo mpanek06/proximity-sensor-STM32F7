@@ -8,6 +8,7 @@
 #ifndef PROX_SENSOR_CONSOLE_H_
 #define PROX_SENSOR_CONSOLE_H_
 
+void ProxSensor_Console_Init();
 void ProxSensor_Console_Perform();
 
 

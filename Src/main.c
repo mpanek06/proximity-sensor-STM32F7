@@ -160,12 +160,13 @@ int main(void)
   /* USER CODE BEGIN 2 */
   MX_USB_DEVICE_Init();
   ProxSensor_Init(FRAME_BUFFER);
+  ProxSensor_Console_Init();
 
   LTDC_Init(FRAME_BUFFER, 0, 0, CAM_IMG_WIDTH, CAM_IMG_HEIGHT);
   BSP_SDRAM_Init();
   CAMERA_Init(CAMERA_R320x240);
   //Delay for the camera to output correct data
-//  HAL_Delay(1000);
+  HAL_Delay(1000);
   Im_size = CAM_IMG_WIDTH * CAM_IMG_HEIGHT * 2 / 4; //size=320*240*2/4
   HAL_DCMI_Start_DMA(&hdcmi, DCMI_MODE_CONTINUOUS , (uint32_t)FRAME_BUFFER, Im_size);
 
@@ -300,6 +301,9 @@ static void MX_USART1_UART_Init(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
+  /* USART1 interrupt Init */
+  HAL_NVIC_SetPriority(USART1_IRQn, 0, 1);
+  HAL_NVIC_EnableIRQ(USART1_IRQn);
 }
 
 /** 

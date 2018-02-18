@@ -10,12 +10,14 @@
 #include "prox_sensor.h"
 
 #include "usbd_cdc_if.h"
+#include "stm32f7xx_hal.h"
+
 
 #define PROX_SENSOR_MENU_ITEM_DESC_LENGTH     40
 #define PROX_SENSOR_NO_OF_OPTIONS             10
 #define PROX_SENSOR_MENU_BUF_SIZE             500
 #define MAX_COMMAND_SIZE                      10
-#define RESPONSE_BUFF_SIZE                    100
+#define RESPONSE_BUFF_SIZE                    500
 
 typedef struct {
 	const char index;
@@ -34,7 +36,7 @@ void ProxSensor_Console_EnableOutputUSB( char* arg );
 
 ProxSensor_CommandEntry_T ProxSensor_consoleOptions[ PROX_SENSOR_NO_OF_OPTIONS ] =
 {
-		{ 'q', "BwTh_R",     	                ProxSensor_Console_SetBwTh_R },
+		{ '1', "BwTh_R",     	                ProxSensor_Console_SetBwTh_R },
 		{ '2', "BwTh_G",     	                ProxSensor_Console_SetBwTh_G },
 		{ '3', "BwTh_B",     	                ProxSensor_Console_SetBwTh_B },
 		{ 'a', "Sample option",	                                        NULL },
@@ -51,29 +53,55 @@ static void getArgFromCommandString( char* command, char* arg );
 /* Line separator used in data sent to terminal */
 static const char lineSeparator[] = "\r\n";
 /* Flag set to true when data has been received on diag port (USB) */
-uint8_t RxClbkFlag = 0;
+uint8_t USB_RxClbkFlag = 0;
+/* Flag set to true when data has been received on diag port (UART) */
+uint8_t UART_RxClbkFlag = 0;
 /* Buffer for received command */
 static char command[ MAX_COMMAND_SIZE ];
+/* Buffer for data typed in terminal*/
+static char RxBuff[ MAX_COMMAND_SIZE ];
 /* Buffer for response sent to terminal by command handler */
-static char commandResponseBuff[ RESPONSE_BUFF_SIZE ];
-/* Buffer used by USB driver */
-extern uint8_t UserRxBufferFS[ MAX_COMMAND_SIZE ];
+char commandResponseBuff[ RESPONSE_BUFF_SIZE ];
+/* Startup string */
+const char startString[] = "Proximity Sensor by Marcin Panek. 2018\n\r\n\r";
 
 extern volatile ProxSensor_Config_T ProxSensor_Config;
+extern UART_HandleTypeDef huart1;
+
+void ProxSensor_Console_Init()
+{
+	HAL_UART_Receive_IT(&huart1, (uint8_t*) RxBuff, 1);
+	HAL_UART_Transmit_IT(&huart1, (uint8_t*)startString, sizeof(startString));
+}
 
 void ProxSensor_Console_Perform()
 {
-	if(RxClbkFlag)
+	if (UART_RxClbkFlag)
 	{
-//		if( isalpha( UserRxBufferFS[0] ) )
+		/* Put received chunk at the end of command buffer */
+		sprintf(command, "%s%s", command, RxBuff);
+
+		/* Echo received data */
+		HAL_UART_Transmit(&huart1, (uint8_t*) RxBuff, sizeof(RxBuff), 100);
+		/* If enter pressed try to invoke command */
+		if(RxBuff[strlen(RxBuff)-1] == '\r')
 		{
-			memset( command, 0, MAX_COMMAND_SIZE );
-			memcpy( command, UserRxBufferFS, MAX_COMMAND_SIZE );
+			/* Echo received data */
+			HAL_UART_Transmit(&huart1, (uint8_t*) lineSeparator, sizeof(lineSeparator), 100);
+
+			command[strlen(command)-1]  = 0;
 			invokeCallbackForCommand(command);
+			/* Clear command buffer */
+			memset(command, 0, sizeof(command));
 		}
 
-		RxClbkFlag = 0;
+		/* Clear Rx buffer */
+		memset(RxBuff, 0, sizeof(RxBuff));
+		/* Clear callback flag */
+		UART_RxClbkFlag = 0;
 	}
+	/* Start listening for next data */
+	HAL_UART_Receive_IT(&huart1, (uint8_t*) RxBuff, 1);
 }
 
 void ProxSensor_Console_SetBwTh_R( char* arg )
@@ -93,7 +121,7 @@ void ProxSensor_Console_SetBwTh_B( char* arg )
 
 void ProxSensor_Console_CurrParams( char* arg )
 {
-	memset(commandResponseBuff, 0, PROX_SENSOR_MENU_BUF_SIZE);
+	memset(commandResponseBuff, 0, RESPONSE_BUFF_SIZE);
 
 	sprintf(commandResponseBuff, "Current parameters of algorithm: %s", lineSeparator );
 
@@ -107,9 +135,9 @@ void ProxSensor_Console_CurrParams( char* arg )
 	sprintf(commandResponseBuff, "%s BWTh G: %d %s", commandResponseBuff, ProxSensor_Config.BwTh_G, lineSeparator );
 	sprintf(commandResponseBuff, "%s BWTh B: %d %s", commandResponseBuff, ProxSensor_Config.BwTh_B, lineSeparator );
 
-	sprintf(commandResponseBuff, "%s Grayscale coeff R: %d %s", commandResponseBuff, ProxSensor_Config.Grayscale_coeff_R, lineSeparator );
-	sprintf(commandResponseBuff, "%s Grayscale coeff G: %d %s", commandResponseBuff, ProxSensor_Config.Grayscale_coeff_G, lineSeparator );
-	sprintf(commandResponseBuff, "%s Grayscale coeff B: %d %s", commandResponseBuff, ProxSensor_Config.Grayscale_coeff_B, lineSeparator );
+	sprintf(commandResponseBuff, "%s Grayscale coeff R: %f %s", commandResponseBuff, ProxSensor_Config.Grayscale_coeff_R, lineSeparator );
+	sprintf(commandResponseBuff, "%s Grayscale coeff G: %f %s", commandResponseBuff, ProxSensor_Config.Grayscale_coeff_G, lineSeparator );
+	sprintf(commandResponseBuff, "%s Grayscale coeff B: %f %s", commandResponseBuff, ProxSensor_Config.Grayscale_coeff_B, lineSeparator );
 
 	strcat(commandResponseBuff, lineSeparator);
 
@@ -118,15 +146,14 @@ void ProxSensor_Console_CurrParams( char* arg )
 
 void ProxSensor_Console_ShowHelp( char* arg )
 {
-	static char bufferMenu[ PROX_SENSOR_MENU_BUF_SIZE ]    = "\0";
 	static char tmpBuf[ PROX_SENSOR_MENU_ITEM_DESC_LENGTH + 5 ] = "\0";
 
 	uint8_t i = 0;
 
-	memset(bufferMenu, 0, PROX_SENSOR_MENU_BUF_SIZE);
+	memset(commandResponseBuff, 0, PROX_SENSOR_MENU_BUF_SIZE);
 	memset(tmpBuf, 0, PROX_SENSOR_MENU_ITEM_DESC_LENGTH + 5);
 
-	sprintf( bufferMenu, "Diag mode menu: \n\r" );
+	sprintf( commandResponseBuff, "Diag mode menu: \n\r" );
 
 	for( i = 0; i < PROX_SENSOR_NO_OF_OPTIONS; ++i )
 	{
@@ -135,13 +162,13 @@ void ProxSensor_Console_ShowHelp( char* arg )
 				ProxSensor_consoleOptions[i].desc,
 				"\n\r"
 				);
-		strcat( bufferMenu, tmpBuf );
+		strcat( commandResponseBuff, tmpBuf );
 		memset( tmpBuf, 0, PROX_SENSOR_MENU_ITEM_DESC_LENGTH + 5 );
 	}
 
-	strcat( bufferMenu, "\n\r" );
+	strcat( commandResponseBuff, "\n\r" );
 
-	sendStringToDiagTerminal( bufferMenu, strlen(bufferMenu) );
+	sendStringToDiagTerminal( commandResponseBuff, strlen(commandResponseBuff) );
 }
 
 /** @brief Restarts uC.
@@ -176,10 +203,10 @@ void ProxSensor_Console_EnableOutputUSB( char* arg )
  *
  * @return void
  */
-
 void sendStringToDiagTerminal( char* buffer, size_t size )
 {
-	CDC_Transmit_FS( (uint8_t*) buffer, size );
+//	CDC_Transmit_FS( (uint8_t*) buffer, size );
+	HAL_UART_Transmit_IT(&huart1, (uint8_t*) buffer, size);
 }
 
 /** @brief Function invokes proper callback for given command.
