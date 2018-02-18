@@ -162,7 +162,7 @@ int main(void)
   ProxSensor_Init(FRAME_BUFFER);
   ProxSensor_Console_Init();
 
-  LTDC_Init(FRAME_BUFFER, 0, 0, CAM_IMG_WIDTH, CAM_IMG_HEIGHT);
+  LTDC_Init(FRAME_BUFFER, 50, 10, CAM_IMG_WIDTH, CAM_IMG_HEIGHT);
   BSP_SDRAM_Init();
   CAMERA_Init(CAMERA_R320x240);
   //Delay for the camera to output correct data
@@ -302,7 +302,7 @@ static void MX_USART1_UART_Init(void)
   }
 
   /* USART1 interrupt Init */
-  HAL_NVIC_SetPriority(USART1_IRQn, 0, 1);
+  HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(USART1_IRQn);
 }
 
@@ -316,7 +316,7 @@ static void MX_DMA_Init(void)
 
   /* DMA interrupt init */
   /* DMA2_Stream1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA2_Stream1_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(DMA2_Stream1_IRQn, 0, 1);
   HAL_NVIC_EnableIRQ(DMA2_Stream1_IRQn);
 
 }
@@ -912,14 +912,10 @@ static void LTDC_Init(uint32_t FB_Address, uint16_t Xpos, uint16_t Ypos, uint16_
 	hltdc.Init.VerticalSync = (RK043FN48H_VSYNC - 1);
 	hltdc.Init.AccumulatedHBP = (RK043FN48H_HSYNC + RK043FN48H_HBP - 1);
 	hltdc.Init.AccumulatedVBP = (RK043FN48H_VSYNC + RK043FN48H_VBP - 1);
-	hltdc.Init.AccumulatedActiveH = (RK043FN48H_HEIGHT + RK043FN48H_VSYNC +
-	RK043FN48H_VBP - 1);
-	hltdc.Init.AccumulatedActiveW = (RK043FN48H_WIDTH + RK043FN48H_HSYNC +
-	RK043FN48H_HBP - 1);
-	hltdc.Init.TotalHeigh = (RK043FN48H_HEIGHT + RK043FN48H_VSYNC +
-	RK043FN48H_VBP + RK043FN48H_VFP - 1);
-	hltdc.Init.TotalWidth = (RK043FN48H_WIDTH + RK043FN48H_HSYNC +
-	RK043FN48H_HBP + RK043FN48H_HFP - 1);
+	hltdc.Init.AccumulatedActiveH = (RK043FN48H_HEIGHT + RK043FN48H_VSYNC +	RK043FN48H_VBP - 1);
+	hltdc.Init.AccumulatedActiveW = (RK043FN48H_WIDTH + RK043FN48H_HSYNC + 	RK043FN48H_HBP - 1);
+	hltdc.Init.TotalHeigh = (RK043FN48H_HEIGHT + RK043FN48H_VSYNC +	RK043FN48H_VBP + RK043FN48H_VFP - 1);
+	hltdc.Init.TotalWidth = (RK043FN48H_WIDTH + RK043FN48H_HSYNC +	RK043FN48H_HBP + RK043FN48H_HFP - 1);
 	/* LCD clock configuration */
 	periph_clk_init_struct.PeriphClockSelection = RCC_PERIPHCLK_LTDC;
 	periph_clk_init_struct.PLLSAI.PLLSAIN = 192;
@@ -927,8 +923,7 @@ static void LTDC_Init(uint32_t FB_Address, uint16_t Xpos, uint16_t Ypos, uint16_
 	periph_clk_init_struct.PLLSAIDivR = RCC_PLLSAIDIVR_4;
 	HAL_RCCEx_PeriphCLKConfig(&periph_clk_init_struct);
 	/* Initialize the LCD pixel width and pixel height */
-	hltdc.LayerCfg->ImageWidth
-	= RK043FN48H_WIDTH;
+	hltdc.LayerCfg->ImageWidth	= RK043FN48H_WIDTH;
 	hltdc.LayerCfg->ImageHeight = RK043FN48H_HEIGHT;
 	hltdc.Init.Backcolor.Blue = 0;/* Background value */
 	hltdc.Init.Backcolor.Green = 0;
@@ -952,9 +947,9 @@ static void LTDC_Init(uint32_t FB_Address, uint16_t Xpos, uint16_t Ypos, uint16_
 
 	/* Layer Init */
 	layer_cfg.WindowX0 = Xpos;
-	layer_cfg.WindowX1 = Width;
+	layer_cfg.WindowX1 = Width + Xpos;
 	layer_cfg.WindowY0 = Ypos;
-	layer_cfg.WindowY1 = Height;
+	layer_cfg.WindowY1 = Height + Ypos;
 	layer_cfg.PixelFormat = LTDC_PIXEL_FORMAT_RGB565;
 	layer_cfg.FBStartAdress = FB_Address;
 	layer_cfg.Alpha = 255;
@@ -968,8 +963,7 @@ static void LTDC_Init(uint32_t FB_Address, uint16_t Xpos, uint16_t Ypos, uint16_
 	layer_cfg.ImageHeight = Height;
 	HAL_LTDC_ConfigLayer(&hltdc, &layer_cfg, 1);
 	DrawProp[1].BackColor = ((uint32_t)0xFFFFFFFF);
-	DrawProp[1].pFont
-	= &Font24;
+	DrawProp[1].pFont = &Font24;
 	DrawProp[1].TextColor = ((uint32_t)0xFF000000);
 	}
 

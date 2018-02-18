@@ -17,9 +17,9 @@ void ProxSensor_Init(uint32_t frameBufferAddr)
 
 uint8_t ProxSensor_Perform()
 {
-	for(uint16_t y = 0; y < CAM_IMG_HEIGHT/2; ++y)
+	for(uint16_t y = 0; y < CAM_IMG_HEIGHT; ++y)
 	{
-		for(uint16_t x = 0; x < CAM_IMG_WIDTH/2; ++x)
+		for(uint16_t x = 0; x < CAM_IMG_WIDTH; ++x)
 	  	{
 			if ( (RGB565_GET_R(ImgPtr[y][x]) - RGB565_To_GreyScale(&(ImgPtr[y][x]))) > ProxSensor_Config.BwTh_R )
 			{
