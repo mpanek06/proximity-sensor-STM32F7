@@ -18,6 +18,7 @@
 #define PROX_SENSOR_MENU_BUF_SIZE             500
 #define MAX_COMMAND_SIZE                      10
 #define RESPONSE_BUFF_SIZE                    500
+#define LIVE_MODE_BUFF_SIZE					  500
 
 typedef struct {
 	const char index;
@@ -25,12 +26,18 @@ typedef struct {
 	void (*optionCallback)( char* );
 }ProxSensor_CommandEntry_T;
 
+struct {
+	/* Boolean to turn on or off live mode - sending live data on terminal */
+	uint8_t liveMode;
+} ProxSensor_ConsoleConfig;
+
 void ProxSensor_Console_SetBwTh_R( char* arg );
 void ProxSensor_Console_SetBwTh_G( char* arg );
 void ProxSensor_Console_SetBwTh_B( char* arg );
 
 void ProxSensor_Console_CurrParams( char* arg );
 void ProxSensor_Console_ShowHelp( char* arg );
+void ProxSensor_Console_ToggleLiveMode( char* arg );
 void ProxSensor_Console_RestartuC( char* arg );
 void ProxSensor_Console_EnableOutputUSB( char* arg );
 
@@ -42,6 +49,7 @@ ProxSensor_CommandEntry_T ProxSensor_consoleOptions[ PROX_SENSOR_NO_OF_OPTIONS ]
 		{ 'a', "Sample option",	                                        NULL },
 		{ 'd', "Display current parameters",   ProxSensor_Console_CurrParams },
 		{ 'h', "Display this menu",              ProxSensor_Console_ShowHelp },
+		{ 'l', "Toggle live mode",          ProxSensor_Console_ToggleLiveMode},
 		{ 'r', "Restart STM32 uC",              ProxSensor_Console_RestartuC },
 		{ 'o', "Enable output on USB",    ProxSensor_Console_EnableOutputUSB },
 };
@@ -62,10 +70,13 @@ static char command[ MAX_COMMAND_SIZE ];
 static char RxBuff[ MAX_COMMAND_SIZE ];
 /* Buffer for response sent to terminal by command handler */
 char commandResponseBuff[ RESPONSE_BUFF_SIZE ];
+/* Buffer for live mode */
+char liveModeBuff[ LIVE_MODE_BUFF_SIZE ];
 /* Startup string */
 const char startString[] = "Proximity Sensor by Marcin Panek. 2018\n\r\n\r";
 
 extern volatile ProxSensor_Config_T ProxSensor_Config;
+extern ProxSensor_CurrentState_T ProxSensor_CurrentState;
 extern UART_HandleTypeDef huart1;
 
 void ProxSensor_Console_Init()
@@ -99,6 +110,12 @@ void ProxSensor_Console_Perform()
 		memset(RxBuff, 0, sizeof(RxBuff));
 		/* Clear callback flag */
 		UART_RxClbkFlag = 0;
+	}
+	else if(ProxSensor_ConsoleConfig.liveMode)
+	{
+		memset(liveModeBuff, 0, LIVE_MODE_BUFF_SIZE);
+		sprintf(liveModeBuff, "R_px: %d\n\r", ProxSensor_CurrentState.numberOfDetectedPixels_R);
+		sendStringToDiagTerminal(liveModeBuff, strlen(liveModeBuff));
 	}
 	/* Start listening for next data */
 	HAL_UART_Receive_IT(&huart1, (uint8_t*) RxBuff, 1);
@@ -169,6 +186,11 @@ void ProxSensor_Console_ShowHelp( char* arg )
 	strcat( commandResponseBuff, "\n\r" );
 
 	sendStringToDiagTerminal( commandResponseBuff, strlen(commandResponseBuff) );
+}
+
+void ProxSensor_Console_ToggleLiveMode( char* arg )
+{
+	ProxSensor_ConsoleConfig.liveMode ^= 1;
 }
 
 /** @brief Restarts uC.

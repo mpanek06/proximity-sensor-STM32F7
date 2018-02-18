@@ -162,14 +162,14 @@ int main(void)
   ProxSensor_Init(FRAME_BUFFER);
   ProxSensor_Console_Init();
 
-  LTDC_Init(FRAME_BUFFER, 50, 10, CAM_IMG_WIDTH, CAM_IMG_HEIGHT);
+  LTDC_Init(FRAME_BUFFER, 80, 0, CAM_IMG_WIDTH, CAM_IMG_HEIGHT);
   BSP_SDRAM_Init();
   CAMERA_Init(CAMERA_R320x240);
   //Delay for the camera to output correct data
   HAL_Delay(1000);
-  Im_size = CAM_IMG_WIDTH * CAM_IMG_HEIGHT * 2 / 4; //size=320*240*2/4
-  HAL_DCMI_Start_DMA(&hdcmi, DCMI_MODE_CONTINUOUS , (uint32_t)FRAME_BUFFER, Im_size);
-
+  Im_size = CAM_IMG_WIDTH * CAM_IMG_HEIGHT * 2 / 4;
+  HAL_DCMI_Start_DMA(&hdcmi, DCMI_MODE_SNAPSHOT, (uint32_t)FRAME_BUFFER, Im_size);
+  uint8_t layer = 0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -177,7 +177,33 @@ int main(void)
   while (1)
   {
 	  ProxSensor_Console_Perform();
-	  ProxSensor_Perform();
+
+	  if(0 == layer)
+	  {
+		  LTDC_Layer1->CACR = 0;
+		  LTDC_Layer2->CACR = 255;
+		  LTDC->SRCR=2;
+
+		  HAL_DCMI_Start_DMA(&hdcmi, DCMI_MODE_SNAPSHOT, (uint32_t)FRAME_BUFFER, Im_size);
+		  DCMI->CR |= DCMI_CR_CAPTURE;
+		  HAL_DCMI_Stop(&hdcmi);
+
+		  ProxSensor_Perform(FRAME_BUFFER);
+		  layer = 1;
+	  }
+	  else
+	  {
+		  LTDC_Layer1->CACR = 255;
+		  LTDC_Layer2->CACR = 0;
+		  LTDC->SRCR=2;
+
+		  HAL_DCMI_Start_DMA(&hdcmi, DCMI_MODE_SNAPSHOT, (uint32_t)FRAME_BUFFER_2, Im_size);
+		  DCMI->CR |= DCMI_CR_CAPTURE;
+		  HAL_DCMI_Stop(&hdcmi);
+
+		  ProxSensor_Perform(FRAME_BUFFER_2);
+		  layer = 0;
+	  }
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
@@ -961,11 +987,16 @@ static void LTDC_Init(uint32_t FB_Address, uint16_t Xpos, uint16_t Ypos, uint16_
 	layer_cfg.BlendingFactor2 = LTDC_BLENDING_FACTOR2_PAxCA;
 	layer_cfg.ImageWidth = Width;
 	layer_cfg.ImageHeight = Height;
+	HAL_LTDC_ConfigLayer(&hltdc, &layer_cfg, 0);
+
+	/* Layer 2 Init */
+	layer_cfg.FBStartAdress = FRAME_BUFFER_2;
 	HAL_LTDC_ConfigLayer(&hltdc, &layer_cfg, 1);
+
 	DrawProp[1].BackColor = ((uint32_t)0xFFFFFFFF);
 	DrawProp[1].pFont = &Font24;
 	DrawProp[1].TextColor = ((uint32_t)0xFF000000);
-	}
+}
 
 uint8_t CAMERA_Init(uint32_t Resolution) /*Camera initialization*/
 {
@@ -976,7 +1007,12 @@ uint8_t CAMERA_Init(uint32_t Resolution) /*Camera initialization*/
 		camera_driv = &ov9655_drv;/* Initialize the camera driver structure */
 		CameraHwAddress = CAMERA_I2C_ADDRESS;
 
-		if (Resolution == CAMERA_R320x240)
+		if (Resolution == CAMERA_R160x120)
+		{
+			camera_driv->Init(CameraHwAddress, Resolution);
+			HAL_DCMI_DisableCROP(&hdcmi);
+		}
+		else if (Resolution == CAMERA_R320x240)
 		{
 			camera_driv->Init(CameraHwAddress, Resolution);
 			HAL_DCMI_DisableCROP(&hdcmi);

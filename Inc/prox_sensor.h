@@ -57,7 +57,16 @@ typedef struct
 	float Grayscale_coeff_B;
 }ProxSensor_Config_T;
 
+
+typedef struct
+{
+	uint32_t numberOfDetectedPixels_R;
+	uint32_t numberOfDetectedPixels_G;
+	uint32_t numberOfDetectedPixels_B;
+
+}ProxSensor_CurrentState_T;
+
 void ProxSensor_Init(uint32_t frameBufferAddr);
-uint8_t ProxSensor_Perform();
+uint8_t ProxSensor_Perform(uint32_t frameBufferAddr);
 
 #endif /* PROX_SENSOR_C_ */
