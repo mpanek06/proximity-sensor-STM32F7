@@ -29,9 +29,13 @@
 
 typedef enum
 {
+	/* Only red objects are taken into account */
 	ProxSensor_Color_R = 0,
+	/* Only green objects are taken into account */
 	ProxSensor_Color_G,
+	/* Only blue objects are taken into account */
 	ProxSensor_Color_B,
+	/* Objects of all: red, green and blue colors are taken into account */
 	ProxSensor_Color_RGB
 }ProxSensor_Color_T;
 
@@ -39,6 +43,13 @@ typedef struct
 {
 	/* Color that is currently being detected */
 	ProxSensor_Color_T detectedColor;
+
+	/* Flag to turn on and off algorithm loop */
+	uint8_t algoActive;
+
+	/* Flag to turn on and off half screen mode -
+	 * algorithm loop works only on half of screen width */
+	uint8_t halfScreenMode;
 
 	/* Number of continuously occurring pixels
 	 * to be detected as object for R, G and B color */
@@ -52,9 +63,9 @@ typedef struct
 	uint8_t BwTh_B;
 
 	/* Threshold for image binarization */
-	float Grayscale_coeff_R;
-	float Grayscale_coeff_G;
-	float Grayscale_coeff_B;
+	uint8_t Grayscale_coeff_R;
+	uint8_t Grayscale_coeff_G;
+	uint8_t Grayscale_coeff_B;
 }ProxSensor_Config_T;
 
 
@@ -66,7 +77,7 @@ typedef struct
 
 }ProxSensor_CurrentState_T;
 
-void ProxSensor_Init(uint32_t frameBufferAddr);
+void    ProxSensor_Init(uint32_t frameBufferAddr);
 uint8_t ProxSensor_Perform(uint32_t frameBufferAddr);
 
 #endif /* PROX_SENSOR_C_ */

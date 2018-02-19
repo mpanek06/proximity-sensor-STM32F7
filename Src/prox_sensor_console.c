@@ -14,7 +14,7 @@
 
 
 #define PROX_SENSOR_MENU_ITEM_DESC_LENGTH     40
-#define PROX_SENSOR_NO_OF_OPTIONS             10
+#define PROX_SENSOR_NO_OF_OPTIONS             20
 #define PROX_SENSOR_MENU_BUF_SIZE             500
 #define MAX_COMMAND_SIZE                      10
 #define RESPONSE_BUFF_SIZE                    500
@@ -28,13 +28,25 @@ typedef struct {
 
 struct {
 	/* Boolean to turn on or off live mode - sending live data on terminal */
-	uint8_t liveMode;
+	uint8_t liveOutputEnabled;
 } ProxSensor_ConsoleConfig;
 
 void ProxSensor_Console_SetBwTh_R( char* arg );
 void ProxSensor_Console_SetBwTh_G( char* arg );
 void ProxSensor_Console_SetBwTh_B( char* arg );
 
+void ProxSensor_Console_SetGrCoeff_R( char* arg );
+void ProxSensor_Console_SetGrCoeff_G( char* arg );
+void ProxSensor_Console_SetGrCoeff_B( char* arg );
+
+void ProxSensor_Console_SetNoOfPixels_R( char* arg );
+void ProxSensor_Console_SetNoOfPixels_G( char* arg );
+void ProxSensor_Console_SetNoOfPixels_B( char* arg );
+
+void ProxSensor_Console_SetDetectedColor( char* arg );
+
+void ProxSensor_Console_ToggleAlgo( char* arg );
+void ProxSensor_Console_ToggleHalfScreen( char* arg );
 void ProxSensor_Console_CurrParams( char* arg );
 void ProxSensor_Console_ShowHelp( char* arg );
 void ProxSensor_Console_ToggleLiveMode( char* arg );
@@ -46,7 +58,15 @@ ProxSensor_CommandEntry_T ProxSensor_consoleOptions[ PROX_SENSOR_NO_OF_OPTIONS ]
 		{ '1', "BwTh_R",     	                ProxSensor_Console_SetBwTh_R },
 		{ '2', "BwTh_G",     	                ProxSensor_Console_SetBwTh_G },
 		{ '3', "BwTh_B",     	                ProxSensor_Console_SetBwTh_B },
-		{ 'a', "Sample option",	                                        NULL },
+		{ '4', "Grayscale_coeff_R",     	 ProxSensor_Console_SetGrCoeff_R },
+		{ '5', "Grayscale_coeff_G",     	 ProxSensor_Console_SetGrCoeff_G },
+		{ '6', "Grayscale_coeff_B",     	 ProxSensor_Console_SetGrCoeff_B },
+		{ '7', "NoOfPixels_R",     	      ProxSensor_Console_SetNoOfPixels_R },
+		{ '8', "NoOfPixels_G",     	      ProxSensor_Console_SetNoOfPixels_G },
+		{ '9', "NoOfPixels_B",     	      ProxSensor_Console_SetNoOfPixels_B },
+		{ 'a', "Toggle algorithm",             ProxSensor_Console_ToggleAlgo },
+		{ 'a', "Toggle half screen mode",ProxSensor_Console_ToggleHalfScreen },
+		{ 'c', "Set detected color",     ProxSensor_Console_SetDetectedColor },
 		{ 'd', "Display current parameters",   ProxSensor_Console_CurrParams },
 		{ 'h', "Display this menu",              ProxSensor_Console_ShowHelp },
 		{ 'l', "Toggle live mode",          ProxSensor_Console_ToggleLiveMode},
@@ -75,7 +95,7 @@ char liveModeBuff[ LIVE_MODE_BUFF_SIZE ];
 /* Startup string */
 const char startString[] = "Proximity Sensor by Marcin Panek. 2018\n\r\n\r";
 
-extern volatile ProxSensor_Config_T ProxSensor_Config;
+extern ProxSensor_Config_T ProxSensor_Config;
 extern ProxSensor_CurrentState_T ProxSensor_CurrentState;
 extern UART_HandleTypeDef huart1;
 
@@ -111,10 +131,10 @@ void ProxSensor_Console_Perform()
 		/* Clear callback flag */
 		UART_RxClbkFlag = 0;
 	}
-	else if(ProxSensor_ConsoleConfig.liveMode)
+	else if(ProxSensor_ConsoleConfig.liveOutputEnabled)
 	{
 		memset(liveModeBuff, 0, LIVE_MODE_BUFF_SIZE);
-		sprintf(liveModeBuff, "R_px: %d\n\r", ProxSensor_CurrentState.numberOfDetectedPixels_R);
+		sprintf(liveModeBuff, "R_px: %ld\n\r", ProxSensor_CurrentState.numberOfDetectedPixels_R);
 		sendStringToDiagTerminal(liveModeBuff, strlen(liveModeBuff));
 	}
 	/* Start listening for next data */
@@ -136,6 +156,56 @@ void ProxSensor_Console_SetBwTh_B( char* arg )
 	ProxSensor_Config.BwTh_B = atoi(arg);
 }
 
+void ProxSensor_Console_SetGrCoeff_R( char* arg )
+{
+	ProxSensor_Config.Grayscale_coeff_R = atoi(arg);
+}
+
+void ProxSensor_Console_SetGrCoeff_G( char* arg )
+{
+	ProxSensor_Config.Grayscale_coeff_G = atoi(arg);
+}
+
+void ProxSensor_Console_SetGrCoeff_B( char* arg )
+{
+	ProxSensor_Config.Grayscale_coeff_B = atoi(arg);
+}
+
+void ProxSensor_Console_SetNoOfPixels_R( char* arg )
+{
+	ProxSensor_Config.numberOfPixels_R = atoi(arg);
+}
+
+void ProxSensor_Console_SetNoOfPixels_G( char* arg )
+{
+	ProxSensor_Config.numberOfPixels_G = atoi(arg);
+}
+
+void ProxSensor_Console_SetNoOfPixels_B( char* arg )
+{
+	ProxSensor_Config.numberOfPixels_B = atoi(arg);
+}
+
+void ProxSensor_Console_ToggleAlgo( char* arg )
+{
+	ProxSensor_Config.algoActive ^= 1;
+}
+
+void ProxSensor_Console_ToggleHalfScreen( char* arg )
+{
+	ProxSensor_Config.halfScreenMode ^= 1;
+}
+
+void ProxSensor_Console_SetDetectedColor( char* arg )
+{
+	uint8_t color = atoi(arg);
+
+	if( color >= ProxSensor_Color_R && color <= ProxSensor_Color_RGB )
+	{
+		ProxSensor_Config.detectedColor = color;
+	}
+}
+
 void ProxSensor_Console_CurrParams( char* arg )
 {
 	memset(commandResponseBuff, 0, RESPONSE_BUFF_SIZE);
@@ -152,9 +222,9 @@ void ProxSensor_Console_CurrParams( char* arg )
 	sprintf(commandResponseBuff, "%s BWTh G: %d %s", commandResponseBuff, ProxSensor_Config.BwTh_G, lineSeparator );
 	sprintf(commandResponseBuff, "%s BWTh B: %d %s", commandResponseBuff, ProxSensor_Config.BwTh_B, lineSeparator );
 
-	sprintf(commandResponseBuff, "%s Grayscale coeff R: %f %s", commandResponseBuff, ProxSensor_Config.Grayscale_coeff_R, lineSeparator );
-	sprintf(commandResponseBuff, "%s Grayscale coeff G: %f %s", commandResponseBuff, ProxSensor_Config.Grayscale_coeff_G, lineSeparator );
-	sprintf(commandResponseBuff, "%s Grayscale coeff B: %f %s", commandResponseBuff, ProxSensor_Config.Grayscale_coeff_B, lineSeparator );
+	sprintf(commandResponseBuff, "%s Grayscale coeff R: %d %s", commandResponseBuff, ProxSensor_Config.Grayscale_coeff_R, lineSeparator );
+	sprintf(commandResponseBuff, "%s Grayscale coeff G: %d %s", commandResponseBuff, ProxSensor_Config.Grayscale_coeff_G, lineSeparator );
+	sprintf(commandResponseBuff, "%s Grayscale coeff B: %d %s", commandResponseBuff, ProxSensor_Config.Grayscale_coeff_B, lineSeparator );
 
 	strcat(commandResponseBuff, lineSeparator);
 
@@ -190,7 +260,7 @@ void ProxSensor_Console_ShowHelp( char* arg )
 
 void ProxSensor_Console_ToggleLiveMode( char* arg )
 {
-	ProxSensor_ConsoleConfig.liveMode ^= 1;
+	ProxSensor_ConsoleConfig.liveOutputEnabled ^= 1;
 }
 
 /** @brief Restarts uC.
