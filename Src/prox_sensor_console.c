@@ -65,7 +65,7 @@ ProxSensor_CommandEntry_T ProxSensor_consoleOptions[ PROX_SENSOR_NO_OF_OPTIONS ]
 		{ '8', "NoOfPixels_G",     	      ProxSensor_Console_SetNoOfPixels_G },
 		{ '9', "NoOfPixels_B",     	      ProxSensor_Console_SetNoOfPixels_B },
 		{ 'a', "Toggle algorithm",             ProxSensor_Console_ToggleAlgo },
-		{ 'a', "Toggle half screen mode",ProxSensor_Console_ToggleHalfScreen },
+		{ 'b', "Toggle half screen mode",ProxSensor_Console_ToggleHalfScreen },
 		{ 'c', "Set detected color",     ProxSensor_Console_SetDetectedColor },
 		{ 'd', "Display current parameters",   ProxSensor_Console_CurrParams },
 		{ 'h', "Display this menu",              ProxSensor_Console_ShowHelp },

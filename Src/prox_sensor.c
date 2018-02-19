@@ -43,6 +43,10 @@ void ProxSensor_PerformOperationsOnFrame(uint32_t frameBufferAddr)
 	{
 		processingWidth = CAM_IMG_WIDTH/2;
 	}
+	else
+	{
+		processingWidth = CAM_IMG_WIDTH;
+	}
 
 	for(uint16_t y = 0; y < CAM_IMG_HEIGHT; ++y)
 	{
