@@ -44,6 +44,7 @@ extern PCD_HandleTypeDef hpcd_USB_OTG_FS;
 /* External variables --------------------------------------------------------*/
 extern DMA_HandleTypeDef hdma_dcmi;
 extern DCMI_HandleTypeDef hdcmi;
+extern UART_HandleTypeDef huart1;
 
 /******************************************************************************/
 /*            Cortex-M7 Processor Interruption and Exception Handlers         */ 
@@ -98,6 +99,20 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /**
+* @brief This function handles USART1 global interrupt.
+*/
+void USART1_IRQHandler(void)
+{
+  /* USER CODE BEGIN USART1_IRQn 0 */
+
+  /* USER CODE END USART1_IRQn 0 */
+  HAL_UART_IRQHandler(&huart1);
+  /* USER CODE BEGIN USART1_IRQn 1 */
+
+  /* USER CODE END USART1_IRQn 1 */
+}
+
+/**
 * @brief This function handles DMA2 stream1 global interrupt.
 */
 void DMA2_Stream1_IRQHandler(void)
@@ -126,11 +141,6 @@ void DCMI_IRQHandler(void)
 }
 
 /* USER CODE BEGIN 1 */
-
-void USART1_IRQHandler(void)
-{
-	HAL_UART_IRQHandler(&huart1);
-}
 
 void HAL_UART_RxCpltCallback( UART_HandleTypeDef* huart )
 {
