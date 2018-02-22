@@ -38,12 +38,12 @@
 /* USER CODE BEGIN 0 */
 extern UART_HandleTypeDef huart1;
 extern uint8_t UART_RxClbkFlag;
+extern PCD_HandleTypeDef hpcd_USB_OTG_FS;
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
 extern DMA_HandleTypeDef hdma_dcmi;
 extern DCMI_HandleTypeDef hdcmi;
-extern PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
 /******************************************************************************/
 /*            Cortex-M7 Processor Interruption and Exception Handlers         */ 
