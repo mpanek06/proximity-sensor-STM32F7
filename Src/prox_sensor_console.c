@@ -226,6 +226,8 @@ void ProxSensor_Console_CurrParams( char* arg )
 	sprintf(commandResponseBuff, "%s Grayscale coeff G: %d %s", commandResponseBuff, ProxSensor_Config.Grayscale_coeff_G, lineSeparator );
 	sprintf(commandResponseBuff, "%s Grayscale coeff B: %d %s", commandResponseBuff, ProxSensor_Config.Grayscale_coeff_B, lineSeparator );
 
+	sprintf(commandResponseBuff, "%s floatOn : %d %s", commandResponseBuff, ProxSensor_Config.floatOn, lineSeparator );
+
 	strcat(commandResponseBuff, lineSeparator);
 
 	sendStringToDiagTerminal( commandResponseBuff, strlen(commandResponseBuff) );
@@ -281,7 +283,7 @@ void ProxSensor_Console_RestartuC( char* arg )
  */
 void ProxSensor_Console_EnableOutputUSB( char* arg )
 {
-
+	ProxSensor_Config.floatOn ^= 1;
 }
 
 /** @brief Function sends buffer to diagnostic terminal.

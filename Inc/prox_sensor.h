@@ -26,6 +26,9 @@
 
 #define COLOR_BLACK 0x0000
 #define COLOR_WHITE 0xffff
+#define COLOR_RED   0xf800
+#define COLOR_GREEN 0x07E0
+#define COLOR_BLUE  0x001F
 
 typedef enum
 {
@@ -46,6 +49,7 @@ typedef struct
 
 	/* Flag to turn on and off algorithm loop */
 	uint8_t algoActive;
+	uint8_t floatOn;
 
 	/* Flag to turn on and off half screen mode -
 	 * algorithm loop works only on half of screen width */

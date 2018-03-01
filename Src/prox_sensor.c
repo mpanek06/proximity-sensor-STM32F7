@@ -5,12 +5,13 @@ ProxSensor_CurrentState_T ProxSensor_CurrentState;
 
 uint16_t (*ImgPtr)[CAM_IMG_WIDTH];
 
-static uint16_t RGB565_To_GreyScale(uint16_t *pixelColor);
-static void     ProxSensor_PerformOperationsOnFrame(uint32_t frameBufferAddr);
+static float RGB565_To_GreyScale(uint16_t *pixelColor);
+static void  ProxSensor_PerformOperationsOnFrame(uint32_t frameBufferAddr);
 
 void ProxSensor_Init(uint32_t frameBufferAddr)
 {
 	ProxSensor_Config.algoActive = 1;
+	ProxSensor_Config.floatOn = 1;
 	ProxSensor_Config.halfScreenMode = 0;
 
 	ProxSensor_Config.Grayscale_coeff_R = 3;
@@ -32,6 +33,7 @@ uint8_t ProxSensor_Perform(uint32_t frameBufferAddr)
 void ProxSensor_PerformOperationsOnFrame(uint32_t frameBufferAddr)
 {
 	static uint16_t processingWidth = CAM_IMG_WIDTH;
+	uint8_t pixelInGrey = 0U;
 
 	ImgPtr = frameBufferAddr;
 
@@ -52,10 +54,21 @@ void ProxSensor_PerformOperationsOnFrame(uint32_t frameBufferAddr)
 	{
 		for(uint16_t x = 0; x < processingWidth; ++x)
 	  	{
-			if ( (RGB565_GET_R(ImgPtr[y][x]) - RGB565_To_GreyScale(&(ImgPtr[y][x]))) > ProxSensor_Config.BwTh_R )
+			pixelInGrey = RGB565_To_GreyScale(&(ImgPtr[y][x]));
+			if ( (RGB565_GET_R(ImgPtr[y][x]) - pixelInGrey) > ProxSensor_Config.BwTh_R )
 			{
-				ImgPtr[y][x] = COLOR_WHITE;
+				ImgPtr[y][x] = COLOR_RED;
 				ProxSensor_CurrentState.numberOfDetectedPixels_R += 1;
+			}
+			else if ( (RGB565_GET_G(ImgPtr[y][x]) - pixelInGrey) > ProxSensor_Config.BwTh_G )
+			{
+				ImgPtr[y][x] = COLOR_GREEN;
+				ProxSensor_CurrentState.numberOfDetectedPixels_G += 1;
+			}
+			else if ( (RGB565_GET_B(ImgPtr[y][x]) - pixelInGrey) > ProxSensor_Config.BwTh_B )
+			{
+				ImgPtr[y][x] = COLOR_BLUE;
+				ProxSensor_CurrentState.numberOfDetectedPixels_B += 1;
 			}
 			else
 			{
@@ -65,9 +78,25 @@ void ProxSensor_PerformOperationsOnFrame(uint32_t frameBufferAddr)
 	}
 }
 
-uint16_t inline RGB565_To_GreyScale(uint16_t *pixelColor)
+float RGB565_To_GreyScale(uint16_t *pixelColor)
 {
-	return  RGB565_GET_R(*pixelColor) / ProxSensor_Config.Grayscale_coeff_R
-	      + RGB565_GET_G(*pixelColor) / ProxSensor_Config.Grayscale_coeff_G
-		  + RGB565_GET_B(*pixelColor) / ProxSensor_Config.Grayscale_coeff_B;
+	if(ProxSensor_Config.floatOn != 1)
+	{
+		return  RGB565_GET_R(*pixelColor) / ProxSensor_Config.Grayscale_coeff_R
+		      + RGB565_GET_G(*pixelColor) / ProxSensor_Config.Grayscale_coeff_G
+		      + RGB565_GET_B(*pixelColor) / ProxSensor_Config.Grayscale_coeff_B;
+	}
+	else
+	{
+		float val_r = (float) RGB565_GET_R(*pixelColor);
+		float val_g = (float) RGB565_GET_G(*pixelColor);
+		float val_b = (float) RGB565_GET_B(*pixelColor);
+
+		float ret_val = val_r * (float)ProxSensor_Config.Grayscale_coeff_R
+                      + val_g * (float)ProxSensor_Config.Grayscale_coeff_G
+                      + val_b * (float)ProxSensor_Config.Grayscale_coeff_B;
+
+		return ret_val;
+	}
+
 }
