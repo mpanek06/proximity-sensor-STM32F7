@@ -222,9 +222,9 @@ void ProxSensor_Console_CurrParams( char* arg )
 	sprintf(commandResponseBuff, "%s BWTh G: %d %s", commandResponseBuff, ProxSensor_Config.BwTh_G, lineSeparator );
 	sprintf(commandResponseBuff, "%s BWTh B: %d %s", commandResponseBuff, ProxSensor_Config.BwTh_B, lineSeparator );
 
-	sprintf(commandResponseBuff, "%s Grayscale coeff R: %d %s", commandResponseBuff, ProxSensor_Config.Grayscale_coeff_R, lineSeparator );
-	sprintf(commandResponseBuff, "%s Grayscale coeff G: %d %s", commandResponseBuff, ProxSensor_Config.Grayscale_coeff_G, lineSeparator );
-	sprintf(commandResponseBuff, "%s Grayscale coeff B: %d %s", commandResponseBuff, ProxSensor_Config.Grayscale_coeff_B, lineSeparator );
+	sprintf(commandResponseBuff, "%s Grayscale coeff R: %f %s", commandResponseBuff, ProxSensor_Config.Grayscale_coeff_R, lineSeparator );
+	sprintf(commandResponseBuff, "%s Grayscale coeff G: %f %s", commandResponseBuff, ProxSensor_Config.Grayscale_coeff_G, lineSeparator );
+	sprintf(commandResponseBuff, "%s Grayscale coeff B: %f %s", commandResponseBuff, ProxSensor_Config.Grayscale_coeff_B, lineSeparator );
 
 	sprintf(commandResponseBuff, "%s floatOn : %d %s", commandResponseBuff, ProxSensor_Config.floatOn, lineSeparator );
 

@@ -1,4 +1,5 @@
 #include "prox_sensor.h"
+#include "main.h"
 
 ProxSensor_Config_T       ProxSensor_Config;
 ProxSensor_CurrentState_T ProxSensor_CurrentState;
@@ -14,9 +15,14 @@ void ProxSensor_Init(uint32_t frameBufferAddr)
 	ProxSensor_Config.floatOn = 1;
 	ProxSensor_Config.halfScreenMode = 0;
 
-	ProxSensor_Config.Grayscale_coeff_R = 3;
-	ProxSensor_Config.Grayscale_coeff_G = 2;
-	ProxSensor_Config.Grayscale_coeff_B = 10;
+	ProxSensor_Config.Grayscale_coeff_R = 0.3f;
+	ProxSensor_Config.Grayscale_coeff_G = 0.6f;
+	ProxSensor_Config.Grayscale_coeff_B = 0.1f;
+
+
+	ProxSensor_Config.BwTh_R = 2;
+	ProxSensor_Config.BwTh_G = 10;
+	ProxSensor_Config.BwTh_B = 2;
 }
 
 uint8_t ProxSensor_Perform(uint32_t frameBufferAddr)
@@ -25,6 +31,11 @@ uint8_t ProxSensor_Perform(uint32_t frameBufferAddr)
 	if(ProxSensor_Config.algoActive)
 	{
 		ProxSensor_PerformOperationsOnFrame(frameBufferAddr);
+	}
+	else
+	{
+		for(uint32_t y = 0; y < CAM_IMG_HEIGHT*CAM_IMG_WIDTH; ++y)
+			asm("nop");
 	}
 
 	return 0;
@@ -80,6 +91,8 @@ void ProxSensor_PerformOperationsOnFrame(uint32_t frameBufferAddr)
 
 float RGB565_To_GreyScale(uint16_t *pixelColor)
 {
+
+	HAL_GPIO_TogglePin(GPIOG, ARDUINO_D4_Pin);
 	if(ProxSensor_Config.floatOn != 1)
 	{
 		return  RGB565_GET_R(*pixelColor) / ProxSensor_Config.Grayscale_coeff_R
@@ -98,5 +111,6 @@ float RGB565_To_GreyScale(uint16_t *pixelColor)
 
 		return ret_val;
 	}
+	HAL_GPIO_TogglePin(GPIOC, ARDUINO_D4_Pin);
 
 }

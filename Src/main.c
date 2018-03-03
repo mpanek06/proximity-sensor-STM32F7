@@ -140,7 +140,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+  GPIO_InitTypeDef GPIO_InitStruct;
   /* USER CODE END Init */
 
   /* Configure the system clock */
