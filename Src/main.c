@@ -113,7 +113,31 @@ void LCD_GPIO_Init(LTDC_HandleTypeDef *, void *);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
+static void MPU_Config (void)
+{
+  MPU_Region_InitTypeDef MPU_InitStruct;
 
+  /* Disable the MPU */
+  HAL_MPU_Disable();
+
+  /* Configure the MPU attributes for SDRAM */
+  MPU_InitStruct.Enable = MPU_REGION_ENABLE;
+  MPU_InitStruct.BaseAddress = 0xC0000000;
+  MPU_InitStruct.Size = MPU_REGION_SIZE_4MB;
+  MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
+  MPU_InitStruct.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
+  MPU_InitStruct.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
+  MPU_InitStruct.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+  MPU_InitStruct.Number = MPU_REGION_NUMBER0;
+  MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL1;
+  MPU_InitStruct.SubRegionDisable = 0x00;
+  MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
+
+  HAL_MPU_ConfigRegion(&MPU_InitStruct);
+
+  /* Enable the MPU */
+  HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);
+}
 /* USER CODE END 0 */
 
 /**
@@ -140,7 +164,6 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-  GPIO_InitTypeDef GPIO_InitStruct;
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -169,6 +192,9 @@ int main(void)
   Im_size = CAM_IMG_WIDTH * CAM_IMG_HEIGHT * 2 / 4;
   HAL_DCMI_Start_DMA(&hdcmi, DCMI_MODE_SNAPSHOT, (uint32_t)FRAME_BUFFER, Im_size);
   uint8_t layer = 0;
+
+  MPU_Config();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */

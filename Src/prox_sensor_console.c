@@ -52,34 +52,43 @@ void ProxSensor_Console_ShowHelp( char* arg );
 void ProxSensor_Console_ToggleLiveMode( char* arg );
 void ProxSensor_Console_RestartuC( char* arg );
 void ProxSensor_Console_EnableOutputUSB( char* arg );
+void ProxSensor_Console_ToggleFloat( char* arg );
+void ProxSensor_Console_SendImgUSB( char* arg );
 
 ProxSensor_CommandEntry_T ProxSensor_consoleOptions[ PROX_SENSOR_NO_OF_OPTIONS ] =
 {
-		{ '1', "BwTh_R",     	                ProxSensor_Console_SetBwTh_R },
-		{ '2', "BwTh_G",     	                ProxSensor_Console_SetBwTh_G },
-		{ '3', "BwTh_B",     	                ProxSensor_Console_SetBwTh_B },
-		{ '4', "Grayscale_coeff_R",     	 ProxSensor_Console_SetGrCoeff_R },
-		{ '5', "Grayscale_coeff_G",     	 ProxSensor_Console_SetGrCoeff_G },
-		{ '6', "Grayscale_coeff_B",     	 ProxSensor_Console_SetGrCoeff_B },
-		{ '7', "NoOfPixels_R",     	      ProxSensor_Console_SetNoOfPixels_R },
-		{ '8', "NoOfPixels_G",     	      ProxSensor_Console_SetNoOfPixels_G },
-		{ '9', "NoOfPixels_B",     	      ProxSensor_Console_SetNoOfPixels_B },
-		{ 'a', "Toggle algorithm",             ProxSensor_Console_ToggleAlgo },
-		{ 'b', "Toggle half screen mode",ProxSensor_Console_ToggleHalfScreen },
-		{ 'c', "Set detected color",     ProxSensor_Console_SetDetectedColor },
-		{ 'd', "Display current parameters",   ProxSensor_Console_CurrParams },
-		{ 'h', "Display this menu",              ProxSensor_Console_ShowHelp },
-		{ 'l', "Toggle live mode",          ProxSensor_Console_ToggleLiveMode},
-		{ 'r', "Restart STM32 uC",              ProxSensor_Console_RestartuC },
-		{ 'o', "Enable output on USB",    ProxSensor_Console_EnableOutputUSB },
+		{ '1', "BwTh_R",     	                          ProxSensor_Console_SetBwTh_R },
+		{ '2', "BwTh_G",     	                          ProxSensor_Console_SetBwTh_G },
+		{ '3', "BwTh_B",     	                          ProxSensor_Console_SetBwTh_B },
+		{ '4', "Grayscale_coeff_R",        	           ProxSensor_Console_SetGrCoeff_R },
+		{ '5', "Grayscale_coeff_G",        	           ProxSensor_Console_SetGrCoeff_G },
+		{ '6', "Grayscale_coeff_B",        	           ProxSensor_Console_SetGrCoeff_B },
+		{ '7', "NoOfPixels_R",     	                ProxSensor_Console_SetNoOfPixels_R },
+		{ '8', "NoOfPixels_G",     	                ProxSensor_Console_SetNoOfPixels_G },
+		{ '9', "NoOfPixels_B",     	                ProxSensor_Console_SetNoOfPixels_B },
+		{ 'a', "Toggle algorithm",                       ProxSensor_Console_ToggleAlgo },
+		{ 'b', "Toggle half screen mode",          ProxSensor_Console_ToggleHalfScreen },
+		{ 'c', "Set detected color",               ProxSensor_Console_SetDetectedColor },
+		{ 'd', "Display current parameters",             ProxSensor_Console_CurrParams },
+		{ 'f', "Toggle using FPU mode",                 ProxSensor_Console_ToggleFloat },
+		{ 'h', "Display this menu",                        ProxSensor_Console_ShowHelp },
+		{ 'l', "Toggle live mode",                   ProxSensor_Console_ToggleLiveMode },
+		{ 'r', "Restart STM32 uC",                        ProxSensor_Console_RestartuC },
+		{ 'u', "Send one image frame via USB",           ProxSensor_Console_SendImgUSB },
+		{ 'o', "Enable output on USB",              ProxSensor_Console_EnableOutputUSB },
 };
 
 static void sendStringToDiagTerminal( char* buffer, size_t size );
+static void sendStringOnUSBPort( const char* buffer, size_t size );
 static void invokeCallbackForCommand( char* command );
 static void getArgFromCommandString( char* command, char* arg );
 
 /* Line separator used in data sent to terminal */
 static const char lineSeparator[] = "\r\n";
+/* Start sequence send before image frame data */
+static const char imgFrameStartSeq[] = "**";
+/* Stopt sequence send after image frame data */
+static const char imgFrameStopSeq[] = "##";
 /* Flag set to true when data has been received on diag port (USB) */
 uint8_t USB_RxClbkFlag = 0;
 /* Flag set to true when data has been received on diag port (UART) */
@@ -276,14 +285,29 @@ void ProxSensor_Console_RestartuC( char* arg )
 	NVIC_SystemReset();
 }
 
-/** @brief Activates sending frame buffer via USB interface.
+/** @brief Activates sending image data via USB interface.
  *
  * @param[in] arg argument for execution
  * @return void
  */
 void ProxSensor_Console_EnableOutputUSB( char* arg )
 {
+	ProxSensor_Config.usbOutOn ^= 1;
+}
+
+void ProxSensor_Console_ToggleFloat( char* arg )
+{
 	ProxSensor_Config.floatOn ^= 1;
+}
+
+void ProxSensor_Console_SendImgUSB( char* arg )
+{
+	sendStringOnUSBPort(imgFrameStartSeq, strlen(imgFrameStartSeq));
+	sendStringOnUSBPort((const char *) FRAME_BUFFER, 0xffff);
+	sendStringOnUSBPort((const char *) (FRAME_BUFFER + 0x0000ffff), 0xffff);
+	sendStringOnUSBPort((const char *) (FRAME_BUFFER + 2 * 0xffff), 22528);
+
+	sendStringOnUSBPort(imgFrameStopSeq, strlen(imgFrameStopSeq));
 }
 
 /** @brief Function sends buffer to diagnostic terminal.
@@ -299,8 +323,12 @@ void ProxSensor_Console_EnableOutputUSB( char* arg )
  */
 void sendStringToDiagTerminal( char* buffer, size_t size )
 {
-//	CDC_Transmit_FS( (uint8_t*) buffer, size );
 	HAL_UART_Transmit_IT(&huart1, (uint8_t*) buffer, size);
+}
+
+static void sendStringOnUSBPort( const char* buffer, size_t size )
+{
+	while( USBD_OK != CDC_Transmit_FS( (uint8_t*) buffer, size ));
 }
 
 /** @brief Function invokes proper callback for given command.

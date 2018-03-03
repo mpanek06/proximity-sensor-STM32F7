@@ -1,6 +1,8 @@
 #include "prox_sensor.h"
 #include "main.h"
 
+#include "usbd_cdc_if.h"
+
 ProxSensor_Config_T       ProxSensor_Config;
 ProxSensor_CurrentState_T ProxSensor_CurrentState;
 
@@ -27,6 +29,11 @@ void ProxSensor_Init(uint32_t frameBufferAddr)
 
 uint8_t ProxSensor_Perform(uint32_t frameBufferAddr)
 {
+
+	if(ProxSensor_Config.usbOutOn)
+	{
+		CDC_Transmit_FS((uint8_t*)(frameBufferAddr) , CAM_IMG_WIDTH*40);
+	}
 
 	if(ProxSensor_Config.algoActive)
 	{

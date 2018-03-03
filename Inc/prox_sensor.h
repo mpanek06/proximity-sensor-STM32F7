@@ -47,9 +47,15 @@ typedef struct
 	/* Color that is currently being detected */
 	ProxSensor_Color_T detectedColor;
 
-	/* Flag to turn on and off algorithm loop */
+
 	uint8_t algoActive;
+
+	/* Flag to turn on and using float numbers
+	 * to calculate greyscale image*/
 	uint8_t floatOn;
+
+	/* Flag to turn on and off image output on USB */
+	uint8_t usbOutOn;
 
 	/* Flag to turn on and off half screen mode -
 	 * algorithm loop works only on half of screen width */
