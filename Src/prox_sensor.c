@@ -22,9 +22,9 @@ void ProxSensor_Init(uint32_t frameBufferAddr)
 	ProxSensor_Config.Grayscale_coeff_B = 0.1f;
 
 
-	ProxSensor_Config.BwTh_R = 2;
+	ProxSensor_Config.BwTh_R = 38;
 	ProxSensor_Config.BwTh_G = 10;
-	ProxSensor_Config.BwTh_B = 2;
+	ProxSensor_Config.BwTh_B = 38;
 }
 
 uint8_t ProxSensor_Perform(uint32_t frameBufferAddr)
