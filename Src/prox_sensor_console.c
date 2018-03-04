@@ -303,6 +303,7 @@ void ProxSensor_Console_ToggleFloat( char* arg )
 void ProxSensor_Console_SendImgUSB( char* arg )
 {
 	sendStringOnUSBPort(imgFrameStartSeq, strlen(imgFrameStartSeq));
+
 	sendStringOnUSBPort((const char *) FRAME_BUFFER, 0xffff);
 	sendStringOnUSBPort((const char *) (FRAME_BUFFER + 0x0000ffff), 0xffff);
 	sendStringOnUSBPort((const char *) (FRAME_BUFFER + 2 * 0xffff), 22528);
