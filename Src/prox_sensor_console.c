@@ -1,3 +1,4 @@
+
 /*
  * prox_sensor_console.c
  *
@@ -47,13 +48,13 @@ void ProxSensor_Console_SetDetectedColor( char* arg );
 
 void ProxSensor_Console_ToggleAlgo( char* arg );
 void ProxSensor_Console_ToggleHalfScreen( char* arg );
+void ProxSensor_Console_ToggleLabeling( char* arg );
 void ProxSensor_Console_CurrParams( char* arg );
 void ProxSensor_Console_ShowHelp( char* arg );
 void ProxSensor_Console_ToggleLiveMode( char* arg );
 void ProxSensor_Console_RestartuC( char* arg );
 void ProxSensor_Console_EnableOutputUSB( char* arg );
 void ProxSensor_Console_ToggleFloat( char* arg );
-void ProxSensor_Console_SendImgUSB( char* arg );
 
 ProxSensor_CommandEntry_T ProxSensor_consoleOptions[ PROX_SENSOR_NO_OF_OPTIONS ] =
 {
@@ -74,6 +75,7 @@ ProxSensor_CommandEntry_T ProxSensor_consoleOptions[ PROX_SENSOR_NO_OF_OPTIONS ]
 		{ 'h', "Display this menu",                        ProxSensor_Console_ShowHelp },
 		{ 'l', "Toggle live mode",                   ProxSensor_Console_ToggleLiveMode },
 		{ 'r', "Restart STM32 uC",                        ProxSensor_Console_RestartuC },
+		{ 's', "Toggle labeling",                    ProxSensor_Console_ToggleLabeling },
 		{ 'u', "Send one image frame via USB",           ProxSensor_Console_SendImgUSB },
 		{ 'o', "Enable output on USB",              ProxSensor_Console_EnableOutputUSB },
 };
@@ -205,6 +207,11 @@ void ProxSensor_Console_ToggleHalfScreen( char* arg )
 	ProxSensor_Config.halfScreenMode ^= 1;
 }
 
+void ProxSensor_Console_ToggleLabeling( char* arg )
+{
+	ProxSensor_Config.labelingActive ^= 1;
+}
+
 void ProxSensor_Console_SetDetectedColor( char* arg )
 {
 	uint8_t color = atoi(arg);
@@ -235,6 +242,8 @@ void ProxSensor_Console_CurrParams( char* arg )
 	sprintf(commandResponseBuff, "%s Grayscale coeff G: %f %s", commandResponseBuff, ProxSensor_Config.Grayscale_coeff_G, lineSeparator );
 	sprintf(commandResponseBuff, "%s Grayscale coeff B: %f %s", commandResponseBuff, ProxSensor_Config.Grayscale_coeff_B, lineSeparator );
 
+	sprintf(commandResponseBuff, "%s algoActive : %d %s", commandResponseBuff, ProxSensor_Config.algoActive, lineSeparator );
+	sprintf(commandResponseBuff, "%s labelingActive : %d %s", commandResponseBuff, ProxSensor_Config.labelingActive, lineSeparator );
 	sprintf(commandResponseBuff, "%s floatOn : %d %s", commandResponseBuff, ProxSensor_Config.floatOn, lineSeparator );
 
 	strcat(commandResponseBuff, lineSeparator);

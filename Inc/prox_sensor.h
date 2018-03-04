@@ -47,32 +47,35 @@ typedef struct
 	/* Color that is currently being detected */
 	ProxSensor_Color_T detectedColor;
 
-
+	/* Flag to turn on and off whole processing. */
 	uint8_t algoActive;
 
-	/* Flag to turn on and using float numbers
-	 * to calculate greyscale image*/
+	/* Flag to turn on and off labeling feature. */
+	uint8_t labelingActive;
+
+	/* Flag to turn on and off using float numbers
+	 * to calculate greyscale image. */
 	uint8_t floatOn;
 
-	/* Flag to turn on and off image output on USB */
+	/* Flag to turn on and off image output on USB. */
 	uint8_t usbOutOn;
 
 	/* Flag to turn on and off half screen mode -
-	 * algorithm loop works only on half of screen width */
+	 * algorithm loop works only on half of screen width. */
 	uint8_t halfScreenMode;
 
 	/* Number of continuously occurring pixels
-	 * to be detected as object for R, G and B color */
+	 * to be detected as object for R, G and B color. */
 	uint16_t numberOfPixels_R;
 	uint16_t numberOfPixels_G;
 	uint16_t numberOfPixels_B;
 
-	/* Threshold for image binarization */
+	/* Threshold for image binarization. */
 	uint8_t BwTh_R;
 	uint8_t BwTh_G;
 	uint8_t BwTh_B;
 
-	/* Threshold for image binarization */
+	/* Threshold for image binarization. */
 	float Grayscale_coeff_R;
 	float Grayscale_coeff_G;
 	float Grayscale_coeff_B;

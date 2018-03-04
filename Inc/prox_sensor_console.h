@@ -10,6 +10,6 @@
 
 void ProxSensor_Console_Init();
 void ProxSensor_Console_Perform();
-
+void ProxSensor_Console_SendImgUSB( char* arg );
 
 #endif /* PROX_SENSOR_CONSOLE_H_ */
