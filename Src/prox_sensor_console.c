@@ -56,6 +56,9 @@ void ProxSensor_Console_RestartuC( char* arg );
 void ProxSensor_Console_EnableOutputUSB( char* arg );
 void ProxSensor_Console_ToggleFloat( char* arg );
 
+//extern uint16_t FRAME_BUFFER[CAM_IMG_WIDTH][CAM_IMG_HEIGHT];
+
+
 ProxSensor_CommandEntry_T ProxSensor_consoleOptions[ PROX_SENSOR_NO_OF_OPTIONS ] =
 {
 		{ '1', "BwTh_R",     	                          ProxSensor_Console_SetBwTh_R },
@@ -169,17 +172,17 @@ void ProxSensor_Console_SetBwTh_B( char* arg )
 
 void ProxSensor_Console_SetGrCoeff_R( char* arg )
 {
-	ProxSensor_Config.Grayscale_coeff_R = atoi(arg);
+	ProxSensor_Config.Grayscale_coeff_R = atof(arg);
 }
 
 void ProxSensor_Console_SetGrCoeff_G( char* arg )
 {
-	ProxSensor_Config.Grayscale_coeff_G = atoi(arg);
+	ProxSensor_Config.Grayscale_coeff_G = atof(arg);
 }
 
 void ProxSensor_Console_SetGrCoeff_B( char* arg )
 {
-	ProxSensor_Config.Grayscale_coeff_B = atoi(arg);
+	ProxSensor_Config.Grayscale_coeff_B = atof(arg);
 }
 
 void ProxSensor_Console_SetNoOfPixels_R( char* arg )
@@ -314,7 +317,7 @@ void ProxSensor_Console_SendImgUSB( char* arg )
 	sendStringOnUSBPort(imgFrameStartSeq, strlen(imgFrameStartSeq));
 
 	sendStringOnUSBPort((const char *) FRAME_BUFFER, 0xffff);
-	sendStringOnUSBPort((const char *) (FRAME_BUFFER + 0x0000ffff), 0xffff);
+	sendStringOnUSBPort((const char *) (FRAME_BUFFER + 1 * 0xffff), 0xffff);
 	sendStringOnUSBPort((const char *) (FRAME_BUFFER + 2 * 0xffff), 22528);
 
 	sendStringOnUSBPort(imgFrameStopSeq, strlen(imgFrameStopSeq));

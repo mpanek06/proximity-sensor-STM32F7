@@ -138,6 +138,9 @@ static void MPU_Config (void)
   /* Enable the MPU */
   HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);
 }
+
+void perform();
+
 /* USER CODE END 0 */
 
 /**
@@ -190,8 +193,6 @@ int main(void)
   //Delay for the camera to output correct data
   HAL_Delay(1000);
   Im_size = CAM_IMG_WIDTH * CAM_IMG_HEIGHT * 2 / 4;
-  HAL_DCMI_Start_DMA(&hdcmi, DCMI_MODE_SNAPSHOT, (uint32_t)FRAME_BUFFER, Im_size);
-  uint8_t layer = 0;
 
   MPU_Config();
 
@@ -203,33 +204,7 @@ int main(void)
   while (1)
   {
 	  ProxSensor_Console_Perform();
-
-	  if(0 == layer)
-	  {
-		  LTDC_Layer1->CACR = 0;
-		  LTDC_Layer2->CACR = 255;
-		  LTDC->SRCR=2;
-
-		  HAL_DCMI_Start_DMA(&hdcmi, DCMI_MODE_SNAPSHOT, (uint32_t)FRAME_BUFFER, Im_size);
-		  DCMI->CR |= DCMI_CR_CAPTURE;
-		  HAL_DCMI_Stop(&hdcmi);
-
-		  ProxSensor_Perform(FRAME_BUFFER);
-		  layer = 1;
-	  }
-	  else
-	  {
-		  LTDC_Layer1->CACR = 255;
-		  LTDC_Layer2->CACR = 0;
-		  LTDC->SRCR=2;
-
-		  HAL_DCMI_Start_DMA(&hdcmi, DCMI_MODE_SNAPSHOT, (uint32_t)FRAME_BUFFER_2, Im_size);
-		  DCMI->CR |= DCMI_CR_CAPTURE;
-		  HAL_DCMI_Stop(&hdcmi);
-
-		  ProxSensor_Perform(FRAME_BUFFER_2);
-		  layer = 0;
-	  }
+	  perform();
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
@@ -468,6 +443,49 @@ uint8_t CAMERA_Init(uint32_t Resolution) /*Camera initialization*/
 	}
 
 	return status;
+}
+
+void showLayer(uint8_t layer_no)
+{
+	/* Set proper alpha values */
+	if(0 == layer_no)
+	{
+		LTDC_Layer1->CACR = 255;
+		LTDC_Layer2->CACR = 0;
+	}
+	else
+	{
+		LTDC_Layer1->CACR = 0;
+		LTDC_Layer2->CACR = 255;
+	}
+
+	/* Reload screen */
+	LTDC->SRCR=2;
+}
+
+void perform()
+{
+	SET_DEBUG_PIN4;
+	static uint8_t layer = 0;
+	uint32_t addr = FRAME_BUFFER;
+
+	if(0 == layer)
+	{
+		showLayer(1);
+		layer = 1;
+	}
+	else
+	{
+		showLayer(0);
+		layer = 0;
+		addr = FRAME_BUFFER_2;
+	}
+
+	HAL_DCMI_Start_DMA(&hdcmi, DCMI_MODE_SNAPSHOT, addr, Im_size);
+	HAL_DCMI_Stop(&hdcmi);
+
+	ProxSensor_Perform(addr);
+	RESET_DEBUG_PIN4;
 }
 
 /* USER CODE END 4 */

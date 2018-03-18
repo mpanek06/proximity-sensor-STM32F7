@@ -1,6 +1,6 @@
 [PreviousGenFiles]
 HeaderPath=/home/marcin/workspaces/Atollic/TrueSTUDIO/STM32_workspace_9.0/proximity-sensor/Inc
-HeaderFiles=ffconf.h;bsp_driver_sd.h;sd_diskio.h;fatfs.h;fatfs_platform.h;usb_host.h;usbh_conf.h;usbh_platform.h;stm32f7xx_it.h;stm32f7xx_hal_conf.h;main.h;usb_device.h;usbd_conf.h;usbd_desc.h;usbd_cdc_if.h;gpio.h;dcmi.h;dma.h;fmc.h;usart.h;
+HeaderFiles=ffconf.h;bsp_driver_sd.h;sd_diskio.h;fatfs.h;fatfs_platform.h;usb_host.h;usbh_conf.h;usbh_platform.h;stm32f7xx_it.h;stm32f7xx_hal_conf.h;main.h;usb_device.h;usbd_conf.h;usbd_desc.h;usbd_cdc_if.h;gpio.h;dcmi.h;dma.h;fmc.h;usart.h;stm32_assert.h;
 SourcePath=/home/marcin/workspaces/Atollic/TrueSTUDIO/STM32_workspace_9.0/proximity-sensor/Src
 SourceFiles=bsp_driver_sd.c;sd_diskio.c;fatfs.c;fatfs_platform.c;usb_host.c;usbh_conf.c;usbh_platform.c;stm32f7xx_it.c;stm32f7xx_hal_msp.c;main.c;usb_device.c;usbd_conf.c;usbd_desc.c;usbd_cdc_if.c;gpio.c;dcmi.c;dma.c;fmc.c;usart.c;
 

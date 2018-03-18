@@ -11,16 +11,11 @@ ProxSensor_Config_T       ProxSensor_Config;
 ProxSensor_CurrentState_T ProxSensor_CurrentState;
 
 uint16_t (*ImgPtr)[CAM_IMG_WIDTH];
-uint8_t  workingFrameArray[CAM_IMG_HEIGHT][CAM_IMG_WIDTH] = {0};
+uint8_t  labelsArray[CAM_IMG_HEIGHT][CAM_IMG_WIDTH] = {0};
 uint8_t  numberOfPixelsWithGivenLabel[MAX_NUM_OF_LABELS] = {0};
 static uint16_t processingWidth = CAM_IMG_WIDTH;
 
-static float    RGB565_To_GreyScale(uint16_t *pixelColor);
 static void     performOperationsOnFrame(uint32_t frameBufferAddr);
-static void     performBinarization(void);
-static void     performLabeling(void);
-static void     removeSmallObjects(void);
-static uint16_t getMinNeighbourLabel(uint16_t x, uint16_t y);
 
 void ProxSensor_Init(uint32_t frameBufferAddr)
 {
@@ -61,12 +56,14 @@ uint8_t ProxSensor_Perform(uint32_t frameBufferAddr)
 		 * only on the half of the width of the image. */
 		processingWidth = CAM_IMG_WIDTH/2;
 	}
+	else
+	{
+		processingWidth = CAM_IMG_WIDTH;
+	}
 
 	if(ProxSensor_Config.algoActive)
 	{
-//		GPIOG->ODR |= ARDUINO_D4_Pin;
 		performOperationsOnFrame(frameBufferAddr);
-//		GPIOG->ODR &= ~(ARDUINO_D4_Pin);
 	}
 	else
 	{
@@ -78,189 +75,132 @@ uint8_t ProxSensor_Perform(uint32_t frameBufferAddr)
 	return 0;
 }
 
-static void performBinarization()
-{
-	uint8_t pixelInGrey = 0U;
-
-	for(uint16_t y = 0; y < CAM_IMG_HEIGHT; ++y)
-	{
-		for(uint16_t x = 0; x < processingWidth; ++x)
-	  	{
-			/* Convert current pixel into greyscale */
-			pixelInGrey = RGB565_To_GreyScale(&(ImgPtr[y][x]));
-
-			if ( ( ProxSensor_Config.detectedColor == ProxSensor_Color_R || ProxSensor_Config.detectedColor == ProxSensor_Color_RGB )
-					&& ( ( RGB565_GET_R(ImgPtr[y][x] ) - pixelInGrey ) > ProxSensor_Config.BwTh_R ) )
-			{
-				ImgPtr[y][x] = COLOR_RED;
-				ProxSensor_CurrentState.numberOfDetectedPixels_R += 1;
-			}
-			else if ( ( ProxSensor_Config.detectedColor == ProxSensor_Color_G || ProxSensor_Config.detectedColor == ProxSensor_Color_RGB )
-					&& ( ( RGB565_GET_G(ImgPtr[y][x]) - pixelInGrey ) > ProxSensor_Config.BwTh_G ) )
-			{
-				ImgPtr[y][x] = COLOR_GREEN;
-				ProxSensor_CurrentState.numberOfDetectedPixels_G += 1;
-			}
-			else if ( ( ProxSensor_Config.detectedColor == ProxSensor_Color_B || ProxSensor_Config.detectedColor == ProxSensor_Color_RGB )
-					&& ( RGB565_GET_B(ImgPtr[y][x]) - pixelInGrey ) > ProxSensor_Config.BwTh_B )
-			{
-				ImgPtr[y][x] = COLOR_BLUE;
-				ProxSensor_CurrentState.numberOfDetectedPixels_B += 1;
-			}
-			else
-			{
-				ImgPtr[y][x] = COLOR_BLACK;
-			}
-	  	}
-	}
-}
-
-uint16_t getMinNeighbourLabel(uint16_t x, uint16_t y)
-{
-	uint8_t  neighbourLabels[8];
-	uint16_t minLabel = 0xffff;
-
-	neighbourLabels[0] = workingFrameArray[y-1][x-1];
-	neighbourLabels[1] = workingFrameArray[y-1][x];
-	neighbourLabels[2] = workingFrameArray[y-1][x+1];
-	neighbourLabels[3] = workingFrameArray[y][x-1];
-	neighbourLabels[4] = workingFrameArray[y][x+1];
-	neighbourLabels[5] = workingFrameArray[y+1][x-1];
-	neighbourLabels[6] = workingFrameArray[y+1][x];
-	neighbourLabels[7] = workingFrameArray[y+1][x+1];
-
-	for(uint8_t i = 0; i<8; ++i)
-	{
-		if( NO_LABEL != neighbourLabels[i] && neighbourLabels[i] < minLabel )
-		{
-			minLabel = neighbourLabels[i];
-		}
-	}
-
-	if( 0xffff == minLabel )
-	{
-		/* If minLabel is still equal to 0xfff
-		 * return NO_LABEL = 0 to indicate that
-		 * this pixel has currently no any
-		 * labeled neighbor */
-		minLabel = NO_LABEL;
-	}
-
-	return minLabel;
-}
-
-void performLabeling()
-{
-	uint16_t currentHighestLabel = 0U;
-	uint16_t minNeighborLabel    = 0U;
-
-	memset(workingFrameArray, 0, CAM_IMG_SIZE);
-
-	for(uint16_t y = 1; y < CAM_IMG_HEIGHT - 1; ++y)
-	{
-		for(uint16_t x = 1; x < processingWidth - 1; ++x)
-	  	{
-			/* Skip pixel if it belongs to background.
-			 * In binary image background is black. */
-			if( COLOR_BLACK == ImgPtr[y][x] )
-			{
-				continue;
-			}
-
-			/* Find out what is the lowest label assigned among
-			 * neighbors. If this turns out to be value of
-			 * NO_LABEL we need to assign new one. */
-			minNeighborLabel = getMinNeighbourLabel(x, y);
-
-			if( NO_LABEL == minNeighborLabel )
-			{
-				/* Create new label */
-				workingFrameArray[y][x] = ++currentHighestLabel;
-				/* Increase number of pixels with this label */
-				numberOfPixelsWithGivenLabel[currentHighestLabel] += 1;
-			}
-			else
-			{
-				/* Assign label from one of neighbors  */
-				workingFrameArray[y][x] = minNeighborLabel;
-
-				/* Increase number of pixels with this label */
-				numberOfPixelsWithGivenLabel[minNeighborLabel] += 1;
-			}
-
-	  	}
-	}
-	asm("nop");
-}
-
-void removeSmallObjects()
-{
-	uint16_t label = 0;
-	for(uint16_t y = 1; y < CAM_IMG_HEIGHT - 1; ++y)
-	{
-		for(uint16_t x = 1; x < processingWidth - 1; ++x)
-	  	{
-			label = workingFrameArray[y][x];
-
-			/* Skip pixel if it belongs to background */
-			if( NO_LABEL == label )
-			{
-				continue;
-			}
-
-			/* If number of pixels with given label is smaller
-			 * than threshold value, this pixel has to be set to
-			 * black color. */
-			if( numberOfPixelsWithGivenLabel[label] < ProxSensor_Config.numberOfPixels_R )
-			{
-				ImgPtr[y][x] = COLOR_BLACK;
-			}
-			else
-			{
-				ImgPtr[y][x] = COLOR_RED;
-			}
-
-	  	}
-	}
-}
-
 void performOperationsOnFrame(uint32_t frameBufferAddr)
 {
+	SET_DEBUG_PIN2;
 	ProxSensor_CurrentState.numberOfDetectedPixels_R = 0;
 	ProxSensor_CurrentState.numberOfDetectedPixels_G = 0;
 	ProxSensor_CurrentState.numberOfDetectedPixels_B = 0;
 
-	performBinarization();
+	uint16_t currentHighestLabel = 0U;
+	uint16_t label               = 0U;
+	uint8_t  pixelInGrey         = 0U;
+	uint32_t i                   = 0U;
+	uint16_t x                   = 0U;
+	uint16_t y                   = 0U;
+	uint8_t  neighbourLabels[4]  = {NO_LABEL};
+
+	uint16_t *ptr                = (uint16_t*) frameBufferAddr;
+	float val_r;
+	float val_g;
+	float val_b;
+	uint16_t pixel = 0;
+
+	memset(labelsArray, 0, CAM_IMG_SIZE);
+	memset(numberOfPixelsWithGivenLabel, 0, MAX_NUM_OF_LABELS);
+
+	/* This loop is responsible for transforming image to graysacle,
+	 * calculating im diff and performing binarization */
+	for( i=0; i < CAM_IMG_SIZE; ++i, ++ptr)
+	{
+		pixel = *ptr;
+
+		/* Convert current pixel into greyscale */
+
+		val_r = (float) RGB565_GET_R(pixel);
+		val_g = (float) RGB565_GET_G(pixel);
+		val_b = (float) RGB565_GET_B(pixel);
+
+		pixelInGrey = val_r * (float)ProxSensor_Config.Grayscale_coeff_R
+				    + val_g * (float)ProxSensor_Config.Grayscale_coeff_G
+					+ val_b * (float)ProxSensor_Config.Grayscale_coeff_B;
+
+		if ( ( ProxSensor_Config.detectedColor == ProxSensor_Color_R || ProxSensor_Config.detectedColor == ProxSensor_Color_RGB )
+				&& ( ( RGB565_GET_R(pixel) - pixelInGrey ) > ProxSensor_Config.BwTh_R ) )
+		{
+			*ptr = COLOR_RED;
+			ProxSensor_CurrentState.numberOfDetectedPixels_R += 1;
+		}
+		else if ( ( ProxSensor_Config.detectedColor == ProxSensor_Color_G || ProxSensor_Config.detectedColor == ProxSensor_Color_RGB )
+				&& ( ( RGB565_GET_G(pixel) - pixelInGrey ) > ProxSensor_Config.BwTh_G ) )
+		{
+			*ptr = COLOR_GREEN;
+			ProxSensor_CurrentState.numberOfDetectedPixels_G += 1;
+		}
+		else if ( ( ProxSensor_Config.detectedColor == ProxSensor_Color_B || ProxSensor_Config.detectedColor == ProxSensor_Color_RGB )
+				&& ( RGB565_GET_B(pixel) - pixelInGrey ) > ProxSensor_Config.BwTh_B )
+		{
+			*ptr = COLOR_BLUE;
+			ProxSensor_CurrentState.numberOfDetectedPixels_B += 1;
+		}
+		else
+		{
+			*ptr = COLOR_BLACK;
+		}
+
+
+		if( ProxSensor_Config.labelingActive && *ptr != COLOR_BLACK )
+		{
+			y = i / CAM_IMG_WIDTH;
+			x = i - y * CAM_IMG_WIDTH;
+
+			if( 0 != x ) neighbourLabels[1] = labelsArray[y][x-1];
+
+			if (y > 0)
+			{
+//				if( 0 != x )               neighbourLabels[3] = labelsArray[y-1][x-1];
+//				if( CAM_IMG_WIDTH-1 != x ) neighbourLabels[1] = labelsArray[y-1][x+1];
+				neighbourLabels[2] = labelsArray[y-1][x];
+			}
+
+			for(uint8_t j = 0; j < 4; j++)
+			{
+				if(neighbourLabels[j] != NO_LABEL)
+				{
+					labelsArray[y][x] = neighbourLabels[j];
+					numberOfPixelsWithGivenLabel[labelsArray[y][x]] += 1;
+					break;
+				}
+			}
+
+			/* If curent pixel still doesnt have label this means it has to have
+			 * new label assigned */
+			if( NO_LABEL == labelsArray[y][x] )
+			{
+				labelsArray[y][x] = ++currentHighestLabel;
+				/* Increase number of pixels with this label */
+				numberOfPixelsWithGivenLabel[currentHighestLabel] += 1;
+			}
+		}
+		/* END OF LABELING */
+	}
 
 	if(ProxSensor_Config.labelingActive)
 	{
-		performLabeling();
-		removeSmallObjects();
+		/* REMOVE SMALL OBJECTS */
+		for(uint16_t y = 1; y < CAM_IMG_HEIGHT - 1; ++y)
+		{
+			for(uint16_t x = 1; x < processingWidth - 1; ++x)
+		  	{
+				label = labelsArray[y][x];
+
+				/* Skip pixel if it belongs to background */
+				if( NO_LABEL == label )
+				{
+					continue;
+				}
+
+				/* If number of pixels with given label is smaller
+				 * than threshold value, this pixel has to be set to
+				 * black color. */
+				if( numberOfPixelsWithGivenLabel[label] < ProxSensor_Config.numberOfPixels_R )
+				{
+					ImgPtr[y][x] = COLOR_BLACK;
+				}
+
+		  	}
+		}
+		/* END OF REMOVE SMALL OBJECTS */
 	}
-}
-
-float RGB565_To_GreyScale(uint16_t *pixelColor)
-{
-
-//	HAL_GPIO_TogglePin(GPIOG, ARDUINO_D4_Pin);
-	if(ProxSensor_Config.floatOn != 1)
-	{
-		return  RGB565_GET_R(*pixelColor) / ProxSensor_Config.Grayscale_coeff_R
-		      + RGB565_GET_G(*pixelColor) / ProxSensor_Config.Grayscale_coeff_G
-		      + RGB565_GET_B(*pixelColor) / ProxSensor_Config.Grayscale_coeff_B;
-	}
-	else
-	{
-		float val_r = (float) RGB565_GET_R(*pixelColor);
-		float val_g = (float) RGB565_GET_G(*pixelColor);
-		float val_b = (float) RGB565_GET_B(*pixelColor);
-
-		float ret_val = val_r * (float)ProxSensor_Config.Grayscale_coeff_R
-                      + val_g * (float)ProxSensor_Config.Grayscale_coeff_G
-                      + val_b * (float)ProxSensor_Config.Grayscale_coeff_B;
-
-		return ret_val;
-	}
-//	HAL_GPIO_TogglePin(GPIOC, ARDUINO_D4_Pin);
-
+	RESET_DEBUG_PIN2;
 }
