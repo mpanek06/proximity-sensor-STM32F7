@@ -11,8 +11,8 @@ ProxSensor_Config_T       ProxSensor_Config;
 ProxSensor_CurrentState_T ProxSensor_CurrentState;
 
 uint16_t (*ImgPtr)[CAM_IMG_WIDTH];
-uint8_t  labelsArray[CAM_IMG_HEIGHT][CAM_IMG_WIDTH] = {0};
-uint8_t  numberOfPixelsWithGivenLabel[MAX_NUM_OF_LABELS] = {0};
+uint16_t  labelsArray[CAM_IMG_HEIGHT][CAM_IMG_WIDTH] = {0};
+uint16_t  numberOfPixelsWithGivenLabel[MAX_NUM_OF_LABELS] = {0};
 static uint16_t processingWidth = CAM_IMG_WIDTH;
 
 static void     performOperationsOnFrame(uint32_t frameBufferAddr);
@@ -184,16 +184,10 @@ void performOperationsOnFrame(uint32_t frameBufferAddr)
 		  	{
 				label = labelsArray[y][x];
 
-				/* Skip pixel if it belongs to background */
-				if( NO_LABEL == label )
-				{
-					continue;
-				}
-
 				/* If number of pixels with given label is smaller
 				 * than threshold value, this pixel has to be set to
 				 * black color. */
-				if( numberOfPixelsWithGivenLabel[label] < ProxSensor_Config.numberOfPixels_R )
+				if( NO_LABEL != label && numberOfPixelsWithGivenLabel[label] < ProxSensor_Config.numberOfPixels_R )
 				{
 					ImgPtr[y][x] = COLOR_BLACK;
 				}

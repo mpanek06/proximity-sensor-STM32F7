@@ -50,6 +50,7 @@ void ProxSensor_Console_ToggleAlgo( char* arg );
 void ProxSensor_Console_ToggleHalfScreen( char* arg );
 void ProxSensor_Console_ToggleLabeling( char* arg );
 void ProxSensor_Console_CurrParams( char* arg );
+void ProxSensor_Console_PrintLabelsArray( char* arg );
 void ProxSensor_Console_ShowHelp( char* arg );
 void ProxSensor_Console_ToggleLiveMode( char* arg );
 void ProxSensor_Console_RestartuC( char* arg );
@@ -74,6 +75,7 @@ ProxSensor_CommandEntry_T ProxSensor_consoleOptions[ PROX_SENSOR_NO_OF_OPTIONS ]
 		{ 'b', "Toggle half screen mode",          ProxSensor_Console_ToggleHalfScreen },
 		{ 'c', "Set detected color",               ProxSensor_Console_SetDetectedColor },
 		{ 'd', "Display current parameters",             ProxSensor_Console_CurrParams },
+		{ 'e', "Print labels array",               ProxSensor_Console_PrintLabelsArray },
 		{ 'f', "Toggle using FPU mode",                 ProxSensor_Console_ToggleFloat },
 		{ 'h', "Display this menu",                        ProxSensor_Console_ShowHelp },
 		{ 'l', "Toggle live mode",                   ProxSensor_Console_ToggleLiveMode },
@@ -108,6 +110,8 @@ char commandResponseBuff[ RESPONSE_BUFF_SIZE ];
 char liveModeBuff[ LIVE_MODE_BUFF_SIZE ];
 /* Startup string */
 const char startString[] = "Proximity Sensor by Marcin Panek. 2018\n\r\n\r";
+
+extern uint8_t labelsArray[CAM_IMG_HEIGHT][CAM_IMG_WIDTH];
 
 extern ProxSensor_Config_T ProxSensor_Config;
 extern ProxSensor_CurrentState_T ProxSensor_CurrentState;
@@ -251,6 +255,30 @@ void ProxSensor_Console_CurrParams( char* arg )
 
 	strcat(commandResponseBuff, lineSeparator);
 
+	sendStringToDiagTerminal( commandResponseBuff, strlen(commandResponseBuff) );
+}
+
+void ProxSensor_Console_PrintLabelsArray( char* arg )
+{
+	memset(commandResponseBuff, 0, RESPONSE_BUFF_SIZE);
+
+	for(uint16_t y = 0; y < CAM_IMG_HEIGHT; ++y)
+	{
+		for(uint16_t x = 0; x < CAM_IMG_WIDTH; ++x)
+	  	{
+			memset(commandResponseBuff, 0, RESPONSE_BUFF_SIZE);
+			sprintf(commandResponseBuff, "%u ", labelsArray[y][x]);
+			sendStringToDiagTerminal( commandResponseBuff, strlen(commandResponseBuff) );
+		}
+
+		memset(commandResponseBuff, 0, RESPONSE_BUFF_SIZE);
+		strcat(commandResponseBuff, lineSeparator);
+		strcat(commandResponseBuff, lineSeparator);
+
+	}
+
+	memset(commandResponseBuff, 0, RESPONSE_BUFF_SIZE);
+	strcat(commandResponseBuff, lineSeparator);
 	sendStringToDiagTerminal( commandResponseBuff, strlen(commandResponseBuff) );
 }
 
