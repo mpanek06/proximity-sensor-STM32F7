@@ -88,7 +88,8 @@ void performOperationsOnFrame(uint32_t frameBufferAddr)
 	uint32_t i                   = 0U;
 	uint16_t x                   = 0U;
 	uint16_t y                   = 0U;
-	uint8_t  neighbourLabels[4]  = {NO_LABEL};
+	uint16_t neighbourLabels[4]  = {NO_LABEL};
+	uint16_t minLabel            = 0xffff;
 
 	uint16_t *ptr                = (uint16_t*) frameBufferAddr;
 	float val_r;
@@ -142,34 +143,41 @@ void performOperationsOnFrame(uint32_t frameBufferAddr)
 		if( ProxSensor_Config.labelingActive && *ptr != COLOR_BLACK )
 		{
 			y = i / CAM_IMG_WIDTH;
-			x = i - y * CAM_IMG_WIDTH;
+			x = i - ( y * CAM_IMG_WIDTH );
 
-			if( 0 != x ) neighbourLabels[1] = labelsArray[y][x-1];
+			if( 0 != x ) neighbourLabels[0] = labelsArray[y][x-1];
 
-			if (y > 0)
+			if (y > 0 && x < CAM_IMG_WIDTH-1)
 			{
-//				if( 0 != x )               neighbourLabels[3] = labelsArray[y-1][x-1];
-//				if( CAM_IMG_WIDTH-1 != x ) neighbourLabels[1] = labelsArray[y-1][x+1];
-				neighbourLabels[2] = labelsArray[y-1][x];
+				if( 0 != y && x != 0 )               neighbourLabels[1] = labelsArray[y-1][x-1];
+				if( CAM_IMG_WIDTH-1 != x ) neighbourLabels[2] = labelsArray[y-1][x+1];
+				neighbourLabels[3] = labelsArray[y-1][x];
+			}
+			if(x>0)
+			{
+				neighbourLabels[4] = labelsArray[y][x-1];
 			}
 
-			for(uint8_t j = 0; j < 4; j++)
+			for(uint8_t j = 0; j < 4; ++j)
 			{
-				if(neighbourLabels[j] != NO_LABEL)
+				if(neighbourLabels[j] != NO_LABEL && neighbourLabels[j] < minLabel)
 				{
-					labelsArray[y][x] = neighbourLabels[j];
-					numberOfPixelsWithGivenLabel[labelsArray[y][x]] += 1;
-					break;
+					minLabel = neighbourLabels[j];
 				}
 			}
 
-			/* If curent pixel still doesnt have label this means it has to have
+			/* If current pixel still doesn't have label this means it has to have
 			 * new label assigned */
-			if( NO_LABEL == labelsArray[y][x] )
+			if( 0xffff == minLabel )
 			{
 				labelsArray[y][x] = ++currentHighestLabel;
 				/* Increase number of pixels with this label */
 				numberOfPixelsWithGivenLabel[currentHighestLabel] += 1;
+			}
+			else
+			{
+				labelsArray[y][x] = minLabel;
+				numberOfPixelsWithGivenLabel[minLabel] += 1;
 			}
 		}
 		/* END OF LABELING */
@@ -178,16 +186,19 @@ void performOperationsOnFrame(uint32_t frameBufferAddr)
 	if(ProxSensor_Config.labelingActive)
 	{
 		/* REMOVE SMALL OBJECTS */
-		for(uint16_t y = 1; y < CAM_IMG_HEIGHT - 1; ++y)
+		for(uint16_t y = 0; y < CAM_IMG_HEIGHT; ++y)
 		{
-			for(uint16_t x = 1; x < processingWidth - 1; ++x)
+			for(uint16_t x = 0; x < processingWidth; ++x)
 		  	{
 				label = labelsArray[y][x];
+
+				if( NO_LABEL == label )
+					continue;
 
 				/* If number of pixels with given label is smaller
 				 * than threshold value, this pixel has to be set to
 				 * black color. */
-				if( NO_LABEL != label && numberOfPixelsWithGivenLabel[label] < ProxSensor_Config.numberOfPixels_R )
+				if( numberOfPixelsWithGivenLabel[label] < ProxSensor_Config.numberOfPixels_R )
 				{
 					ImgPtr[y][x] = COLOR_BLACK;
 				}
