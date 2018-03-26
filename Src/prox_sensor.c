@@ -2,6 +2,8 @@
 #include "prox_sensor_console.h"
 #include "main.h"
 
+#include "lcd_lib.h"
+
 #include "usbd_cdc_if.h"
 
 #define  NO_LABEL          0
