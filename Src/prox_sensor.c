@@ -97,8 +97,8 @@ void performOperationsOnFrame(uint32_t frameBufferAddr)
 	float val_b;
 	uint16_t pixel = 0;
 
-	memset(labelsArray, 0, CAM_IMG_SIZE);
-	memset(numberOfPixelsWithGivenLabel, 0, MAX_NUM_OF_LABELS);
+	memset(labelsArray, 0, sizeof(labelsArray));
+	memset(numberOfPixelsWithGivenLabel, 0, sizeof(numberOfPixelsWithGivenLabel));
 
 	/* This loop is responsible for transforming image to graysacle,
 	 * calculating im diff and performing binarization */
@@ -145,18 +145,16 @@ void performOperationsOnFrame(uint32_t frameBufferAddr)
 			y = i / CAM_IMG_WIDTH;
 			x = i - ( y * CAM_IMG_WIDTH );
 
-			if( 0 != x ) neighbourLabels[0] = labelsArray[y][x-1];
+			memset(neighbourLabels, NO_LABEL, sizeof(neighbourLabels));
 
-			if (y > 0 && x < CAM_IMG_WIDTH-1)
-			{
-				if( 0 != y && x != 0 )               neighbourLabels[1] = labelsArray[y-1][x-1];
-				if( CAM_IMG_WIDTH-1 != x ) neighbourLabels[2] = labelsArray[y-1][x+1];
-				neighbourLabels[3] = labelsArray[y-1][x];
-			}
-			if(x>0)
-			{
-				neighbourLabels[4] = labelsArray[y][x-1];
-			}
+			if( 0 != x )
+				neighbourLabels[0] = labelsArray[y][x-1];
+//			if( 0 != y && x != 0 )
+//				neighbourLabels[1] = labelsArray[y-1][x-1];
+			if( 0 != y )
+				neighbourLabels[2] = labelsArray[y-1][x];
+//			if( 0 != y && CAM_IMG_WIDTH-1 != x )
+//				neighbourLabels[3] = labelsArray[y-1][x+1];
 
 			for(uint8_t j = 0; j < 4; ++j)
 			{
@@ -171,12 +169,13 @@ void performOperationsOnFrame(uint32_t frameBufferAddr)
 			if( 0xffff == minLabel )
 			{
 				labelsArray[y][x] = ++currentHighestLabel;
-				/* Increase number of pixels with this label */
-				numberOfPixelsWithGivenLabel[currentHighestLabel] += 1;
+				/* Set number of pixels with new label to 1 since it is new */
+				numberOfPixelsWithGivenLabel[currentHighestLabel] = 1;
 			}
 			else
 			{
 				labelsArray[y][x] = minLabel;
+				/* Increase number of pixels with this label */
 				numberOfPixelsWithGivenLabel[minLabel] += 1;
 			}
 		}

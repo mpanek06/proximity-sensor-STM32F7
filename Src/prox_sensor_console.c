@@ -15,7 +15,7 @@
 
 
 #define PROX_SENSOR_MENU_ITEM_DESC_LENGTH     40
-#define PROX_SENSOR_NO_OF_OPTIONS             20
+#define PROX_SENSOR_NO_OF_OPTIONS             30
 #define PROX_SENSOR_MENU_BUF_SIZE             500
 #define MAX_COMMAND_SIZE                      10
 #define RESPONSE_BUFF_SIZE                    500
@@ -50,7 +50,7 @@ void ProxSensor_Console_ToggleAlgo( char* arg );
 void ProxSensor_Console_ToggleHalfScreen( char* arg );
 void ProxSensor_Console_ToggleLabeling( char* arg );
 void ProxSensor_Console_CurrParams( char* arg );
-void ProxSensor_Console_PrintLabelsArray( char* arg );
+void ProxSensor_Console_PrintDebugDataOnUSB( char* arg );
 void ProxSensor_Console_ShowHelp( char* arg );
 void ProxSensor_Console_ToggleLiveMode( char* arg );
 void ProxSensor_Console_RestartuC( char* arg );
@@ -58,7 +58,7 @@ void ProxSensor_Console_EnableOutputUSB( char* arg );
 void ProxSensor_Console_ToggleFloat( char* arg );
 
 //extern uint16_t FRAME_BUFFER[CAM_IMG_WIDTH][CAM_IMG_HEIGHT];
-
+extern uint16_t (*ImgPtr)[CAM_IMG_WIDTH];
 
 ProxSensor_CommandEntry_T ProxSensor_consoleOptions[ PROX_SENSOR_NO_OF_OPTIONS ] =
 {
@@ -75,7 +75,7 @@ ProxSensor_CommandEntry_T ProxSensor_consoleOptions[ PROX_SENSOR_NO_OF_OPTIONS ]
 		{ 'b', "Toggle half screen mode",          ProxSensor_Console_ToggleHalfScreen },
 		{ 'c', "Set detected color",               ProxSensor_Console_SetDetectedColor },
 		{ 'd', "Display current parameters",             ProxSensor_Console_CurrParams },
-		{ 'e', "Print labels array",               ProxSensor_Console_PrintLabelsArray },
+		{ 'e', "Print labels array",            ProxSensor_Console_PrintDebugDataOnUSB },
 		{ 'f', "Toggle using FPU mode",                 ProxSensor_Console_ToggleFloat },
 		{ 'h', "Display this menu",                        ProxSensor_Console_ShowHelp },
 		{ 'l', "Toggle live mode",                   ProxSensor_Console_ToggleLiveMode },
@@ -111,7 +111,7 @@ char liveModeBuff[ LIVE_MODE_BUFF_SIZE ];
 /* Startup string */
 const char startString[] = "Proximity Sensor by Marcin Panek. 2018\n\r\n\r";
 
-extern uint8_t labelsArray[CAM_IMG_HEIGHT][CAM_IMG_WIDTH];
+extern uint16_t labelsArray[CAM_IMG_HEIGHT][CAM_IMG_WIDTH];
 
 extern ProxSensor_Config_T ProxSensor_Config;
 extern ProxSensor_CurrentState_T ProxSensor_CurrentState;
@@ -258,29 +258,42 @@ void ProxSensor_Console_CurrParams( char* arg )
 	sendStringToDiagTerminal( commandResponseBuff, strlen(commandResponseBuff) );
 }
 
-void ProxSensor_Console_PrintLabelsArray( char* arg )
+void ProxSensor_Console_PrintDebugDataOnUSB( char* arg )
 {
 	memset(commandResponseBuff, 0, RESPONSE_BUFF_SIZE);
 
 	for(uint16_t y = 0; y < CAM_IMG_HEIGHT; ++y)
 	{
 		for(uint16_t x = 0; x < CAM_IMG_WIDTH; ++x)
-	  	{
-			memset(commandResponseBuff, 0, RESPONSE_BUFF_SIZE);
-			sprintf(commandResponseBuff, "%u ", labelsArray[y][x]);
-			sendStringToDiagTerminal( commandResponseBuff, strlen(commandResponseBuff) );
+		{
+			sprintf(commandResponseBuff, " %d;", labelsArray[y][x]);
+			sendStringOnUSBPort( commandResponseBuff, strlen(commandResponseBuff) );
 		}
 
-		memset(commandResponseBuff, 0, RESPONSE_BUFF_SIZE);
 		strcat(commandResponseBuff, lineSeparator);
+		sendStringOnUSBPort( commandResponseBuff, strlen(commandResponseBuff) );
+	}
+
+	sprintf(commandResponseBuff, "%s", lineSeparator);
+	sendStringOnUSBPort( commandResponseBuff, strlen(commandResponseBuff) );
+
+	sendStringOnUSBPort(imgFrameStartSeq, strlen(imgFrameStartSeq));
+
+	for(uint16_t y = 0; y < CAM_IMG_HEIGHT; ++y)
+	{
+		for(uint16_t x = 0; x < CAM_IMG_WIDTH; ++x)
+		{
+			sprintf(commandResponseBuff, " %d;", ImgPtr[y][x]);
+			sendStringOnUSBPort( commandResponseBuff, strlen(commandResponseBuff) );
+		}
 		strcat(commandResponseBuff, lineSeparator);
+		sendStringOnUSBPort( commandResponseBuff, strlen(commandResponseBuff) );
 
 	}
 
-	memset(commandResponseBuff, 0, RESPONSE_BUFF_SIZE);
-	strcat(commandResponseBuff, lineSeparator);
-	sendStringToDiagTerminal( commandResponseBuff, strlen(commandResponseBuff) );
+	sendStringOnUSBPort(imgFrameStopSeq, strlen(imgFrameStopSeq));
 }
+
 
 void ProxSensor_Console_ShowHelp( char* arg )
 {
