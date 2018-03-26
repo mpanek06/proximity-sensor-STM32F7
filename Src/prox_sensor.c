@@ -7,15 +7,15 @@
 #include "usbd_cdc_if.h"
 
 #define  NO_LABEL          0
-#define  MAX_NUM_OF_LABELS 2500
+#define  MAX_NUM_OF_LABELS 400
 
 ProxSensor_Config_T       ProxSensor_Config;
 ProxSensor_CurrentState_T ProxSensor_CurrentState;
 
-uint16_t (*ImgPtr)[CAM_IMG_WIDTH];
-uint16_t  labelsArray[CAM_IMG_HEIGHT][CAM_IMG_WIDTH] = {0};
-uint16_t  numberOfPixelsWithGivenLabel[MAX_NUM_OF_LABELS] = {0};
-static uint16_t processingWidth = CAM_IMG_WIDTH;
+uint16_t                (*ImgPtr)[CAM_IMG_WIDTH];
+uint16_t                labelsArray[CAM_IMG_HEIGHT][CAM_IMG_WIDTH] = {0};
+ProxSensor_LabelInfo_T  labelsInfoArray[MAX_NUM_OF_LABELS] = {0};
+uint16_t                processingWidth = CAM_IMG_WIDTH;
 
 static void     performOperationsOnFrame(uint32_t frameBufferAddr);
 
@@ -91,7 +91,7 @@ void performOperationsOnFrame(uint32_t frameBufferAddr)
 	uint16_t x                   = 0U;
 	uint16_t y                   = 0U;
 	uint16_t neighbourLabels[4]  = {NO_LABEL};
-	uint16_t minLabel            = 0xffff;
+	uint16_t minLabel            = MAX_U16_VAL;
 
 	uint16_t *ptr                = (uint16_t*) frameBufferAddr;
 	float val_r;
@@ -100,7 +100,7 @@ void performOperationsOnFrame(uint32_t frameBufferAddr)
 	uint16_t pixel = 0;
 
 	memset(labelsArray, 0, sizeof(labelsArray));
-	memset(numberOfPixelsWithGivenLabel, 0, sizeof(numberOfPixelsWithGivenLabel));
+	memset(labelsInfoArray, 0, sizeof(labelsInfoArray));
 
 	/* This loop is responsible for transforming image to graysacle,
 	 * calculating im diff and performing binarization */
@@ -168,17 +168,41 @@ void performOperationsOnFrame(uint32_t frameBufferAddr)
 
 			/* If current pixel still doesn't have label this means it has to have
 			 * new label assigned */
-			if( 0xffff == minLabel )
+			if( MAX_U16_VAL == minLabel )
 			{
 				labelsArray[y][x] = ++currentHighestLabel;
+
 				/* Set number of pixels with new label to 1 since it is new */
-				numberOfPixelsWithGivenLabel[currentHighestLabel] = 1;
+				labelsInfoArray[currentHighestLabel].numberOfPixels = 1;
+
+				labelsInfoArray[currentHighestLabel].x_min = x;
+				labelsInfoArray[currentHighestLabel].x_max = x;
+				labelsInfoArray[currentHighestLabel].y_min = y;
+				labelsInfoArray[currentHighestLabel].y_max = y;
 			}
 			else
 			{
 				labelsArray[y][x] = minLabel;
 				/* Increase number of pixels with this label */
-				numberOfPixelsWithGivenLabel[minLabel] += 1;
+				labelsInfoArray[currentHighestLabel].numberOfPixels += 1;
+
+				if( x > labelsInfoArray[currentHighestLabel].x_max )
+				{
+					labelsInfoArray[currentHighestLabel].x_max = x;
+				}
+				else if( x < labelsInfoArray[currentHighestLabel].x_min )
+				{
+					labelsInfoArray[currentHighestLabel].x_min = x;
+				}
+
+				if( y > labelsInfoArray[currentHighestLabel].y_max )
+				{
+					labelsInfoArray[currentHighestLabel].y_max = y;
+				}
+				else if( y < labelsInfoArray[currentHighestLabel].y_min )
+				{
+					labelsInfoArray[currentHighestLabel].y_min = y;
+				}
 			}
 		}
 		/* END OF LABELING */
@@ -199,7 +223,7 @@ void performOperationsOnFrame(uint32_t frameBufferAddr)
 				/* If number of pixels with given label is smaller
 				 * than threshold value, this pixel has to be set to
 				 * black color. */
-				if( numberOfPixelsWithGivenLabel[label] < ProxSensor_Config.numberOfPixels_R )
+				if( labelsInfoArray[label].numberOfPixels < ProxSensor_Config.numberOfPixels_R )
 				{
 					ImgPtr[y][x] = COLOR_BLACK;
 				}
@@ -208,5 +232,16 @@ void performOperationsOnFrame(uint32_t frameBufferAddr)
 		}
 		/* END OF REMOVE SMALL OBJECTS */
 	}
+
+	for(uint8_t i = 1; i <= currentHighestLabel; ++i )
+	{
+		LCD_drawRectangle(labelsInfoArray[i].x_min,
+						  labelsInfoArray[i].y_min,
+						  labelsInfoArray[i].x_max,
+						  labelsInfoArray[i].y_max,
+						  0
+						  );
+	}
+
 	RESET_DEBUG_PIN2;
 }

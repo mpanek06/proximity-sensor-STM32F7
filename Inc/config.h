@@ -23,4 +23,8 @@
 #define SET_DEBUG_PIN2    ( GPIOG->ODR |= ARDUINO_D2_Pin )
 #define RESET_DEBUG_PIN2  ( GPIOG->ODR &= ~(ARDUINO_D2_Pin) )
 
+#define MAX_U8_VAL     ((uint8_t)  0xff)
+#define MAX_U16_VAL    ((uint16_t) 0xffff)
+#define MAX_U32_VAL    ((uint32_t) 0xffffffff)
+
 #endif /* CONFIG_H_ */

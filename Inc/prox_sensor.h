@@ -81,6 +81,19 @@ typedef struct
 	float Grayscale_coeff_B;
 }ProxSensor_Config_T;
 
+typedef struct
+{
+	/* Number of pixels that share this label */
+	uint16_t numberOfPixels;
+	/* Min index on x axis - for bounding box */
+	uint16_t x_min;
+	/* Max index on x axis - for bounding box */
+	uint16_t x_max;
+	/* Min index on y axis - for bounding box */
+	uint16_t y_min;
+	/* Max index on y axis - for bounding box */
+	uint16_t y_max;
+}ProxSensor_LabelInfo_T;
 
 typedef struct
 {
