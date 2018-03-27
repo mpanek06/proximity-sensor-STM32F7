@@ -66,9 +66,9 @@ typedef struct
 
 	/* Number of continuously occurring pixels
 	 * to be detected as object for R, G and B color. */
-	uint16_t numberOfPixels_R;
-	uint16_t numberOfPixels_G;
-	uint16_t numberOfPixels_B;
+	uint16_t minNumberOfPixels_R;
+	uint16_t minNumberOfPixels_G;
+	uint16_t minNumberOfPixels_B;
 
 	/* Threshold for image binarization. */
 	uint8_t BwTh_R;
@@ -97,9 +97,7 @@ typedef struct
 
 typedef struct
 {
-	uint32_t numberOfDetectedPixels_R;
-	uint32_t numberOfDetectedPixels_G;
-	uint32_t numberOfDetectedPixels_B;
+
 
 }ProxSensor_CurrentState_T;
 

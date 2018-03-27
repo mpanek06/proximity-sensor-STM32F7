@@ -152,7 +152,7 @@ void ProxSensor_Console_Perform()
 	else if(ProxSensor_ConsoleConfig.liveOutputEnabled)
 	{
 		memset(liveModeBuff, 0, LIVE_MODE_BUFF_SIZE);
-		sprintf(liveModeBuff, "R_px: %ld\n\r", ProxSensor_CurrentState.numberOfDetectedPixels_R);
+		sprintf(liveModeBuff, "Size of object: %ld\n\r", 0L);
 		sendStringToDiagTerminal(liveModeBuff, strlen(liveModeBuff));
 	}
 	/* Start listening for next data */
@@ -191,17 +191,17 @@ void ProxSensor_Console_SetGrCoeff_B( char* arg )
 
 void ProxSensor_Console_SetNoOfPixels_R( char* arg )
 {
-	ProxSensor_Config.numberOfPixels_R = atoi(arg);
+	ProxSensor_Config.minNumberOfPixels_R = atoi(arg);
 }
 
 void ProxSensor_Console_SetNoOfPixels_G( char* arg )
 {
-	ProxSensor_Config.numberOfPixels_G = atoi(arg);
+	ProxSensor_Config.minNumberOfPixels_G = atoi(arg);
 }
 
 void ProxSensor_Console_SetNoOfPixels_B( char* arg )
 {
-	ProxSensor_Config.numberOfPixels_B = atoi(arg);
+	ProxSensor_Config.minNumberOfPixels_B = atoi(arg);
 }
 
 void ProxSensor_Console_ToggleAlgo( char* arg )
@@ -237,9 +237,9 @@ void ProxSensor_Console_CurrParams( char* arg )
 
 	sprintf(commandResponseBuff, "%s Detected color: %d %s", commandResponseBuff, ProxSensor_Config.detectedColor, lineSeparator );
 
-	sprintf(commandResponseBuff, "%s Pixels R: %d %s", commandResponseBuff, ProxSensor_Config.numberOfPixels_R, lineSeparator );
-	sprintf(commandResponseBuff, "%s Pixels G: %d %s", commandResponseBuff, ProxSensor_Config.numberOfPixels_G, lineSeparator );
-	sprintf(commandResponseBuff, "%s Pixels B: %d %s", commandResponseBuff, ProxSensor_Config.numberOfPixels_B, lineSeparator );
+	sprintf(commandResponseBuff, "%s Pixels R: %d %s", commandResponseBuff, ProxSensor_Config.minNumberOfPixels_R, lineSeparator );
+	sprintf(commandResponseBuff, "%s Pixels G: %d %s", commandResponseBuff, ProxSensor_Config.minNumberOfPixels_G, lineSeparator );
+	sprintf(commandResponseBuff, "%s Pixels B: %d %s", commandResponseBuff, ProxSensor_Config.minNumberOfPixels_B, lineSeparator );
 
 	sprintf(commandResponseBuff, "%s BWTh R: %d %s", commandResponseBuff, ProxSensor_Config.BwTh_R, lineSeparator );
 	sprintf(commandResponseBuff, "%s BWTh G: %d %s", commandResponseBuff, ProxSensor_Config.BwTh_G, lineSeparator );
