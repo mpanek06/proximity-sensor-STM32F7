@@ -17,12 +17,14 @@ uint16_t                labelsArray[CAM_IMG_HEIGHT][CAM_IMG_WIDTH] = {0};
 ProxSensor_LabelInfo_T  labelsInfoArray[MAX_NUM_OF_LABELS] = {0};
 uint16_t                processingWidth = CAM_IMG_WIDTH;
 
-static void     performOperationsOnFrame(uint32_t frameBufferAddr);
+static void             performOperationsOnFrame(uint32_t frameBufferAddr);
+static inline uint8_t   isLabelValid(uint16_t labelNumber);
 
 void ProxSensor_Init(uint32_t frameBufferAddr)
 {
 	ProxSensor_Config.algoActive     = 1;
 	ProxSensor_Config.labelingActive = 1;
+	ProxSensor_Config.removingSmallObjectsActive = 1;
 	ProxSensor_Config.halfScreenMode = 0;
 	ProxSensor_Config.detectedColor  = ProxSensor_Color_R;
 
@@ -78,8 +80,6 @@ uint8_t ProxSensor_Perform(uint32_t frameBufferAddr)
 
 void performOperationsOnFrame(uint32_t frameBufferAddr)
 {
-	SET_DEBUG_PIN2;
-
 	uint16_t currentHighestLabel = 0U;
 	uint16_t label               = 0U;
 	uint8_t  pixelInGrey         = 0U;
@@ -148,75 +148,69 @@ void performOperationsOnFrame(uint32_t frameBufferAddr)
 			y = i / CAM_IMG_WIDTH;
 			x = i - ( y * CAM_IMG_WIDTH );
 
-			memset(neighbourLabels, NO_LABEL, sizeof(neighbourLabels));
-			/* Getting values of neighbor pixels (N, W, NW, NE) */
-			if( 0 != x )
-				neighbourLabels[0] = labelsArray[y][x-1];
-//			if( 0 != y && x != 0 )
-//				neighbourLabels[1] = labelsArray[y-1][x-1];
-			if( 0 != y )
-				neighbourLabels[2] = labelsArray[y-1][x];
-//			if( 0 != y && CAM_IMG_WIDTH-1 != x )
-//				neighbourLabels[3] = labelsArray[y-1][x+1];
-
-			/* Picking minimal value of label  */
-			for(uint8_t j = 0; j < 4; ++j)
+			if( labelsArray[y-1][x] != NO_LABEL && labelsArray[y][x-1] != NO_LABEL
+					&& labelsArray[y-1][x] != labelsArray[y][x-1] )
 			{
-				if(neighbourLabels[j] != NO_LABEL && neighbourLabels[j] < minLabel)
-				{
-					minLabel = neighbourLabels[j];
-				}
+				label = labelsArray[y][x-1];
+
+				labelsInfoArray[labelsArray[y-1][x]].numberOfPixels -= 1;
+
+				labelsArray[y][x] = label;
+				labelsArray[y-1][x] = label;
+
+				labelsInfoArray[label].numberOfPixels += 2;
 			}
-
-			/* If non of neighbor pixel has assigned label
-			 * the current one needs to have a new one. */
-			if( MAX_U16_VAL == minLabel )
+			else if( labelsArray[y][x-1] != NO_LABEL )
 			{
-				/* Create new label by incrementing current value of counter. */
-				++currentHighestLabel;
-				/* Assign new label to current pixel. */
-				labelsArray[y][x] = currentHighestLabel;
-
-				/* Set number of pixels with new label to 1 since it is new */
-				labelsInfoArray[currentHighestLabel].numberOfPixels = 1;
-
-				/* Initalize x/y min/max values for new pixel in order to be able
-				 * to determine those values for bounding box.*/
-				labelsInfoArray[currentHighestLabel].x_min = x;
-				labelsInfoArray[currentHighestLabel].x_max = x;
-				labelsInfoArray[currentHighestLabel].y_min = y;
-				labelsInfoArray[currentHighestLabel].y_max = y;
+				label = labelsArray[y][x-1];
+				labelsArray[y][x] = label;
+				labelsArray[y][x] = labelsArray[y][x-1];
+			}
+			else if( labelsArray[y-1][x] != NO_LABEL )
+			{
+				label = labelsArray[y-1][x];
+				labelsArray[y][x] = label;
+				labelsInfoArray[label].numberOfPixels += 1;
 			}
 			else
 			{
-				/* Assign label inherited from one of the neighbors. */
-				labelsArray[y][x] = minLabel;
-				/* Increase number of pixels with this label. */
-				labelsInfoArray[currentHighestLabel].numberOfPixels += 1;
+				label = ++currentHighestLabel;
+				labelsArray[y][x] = label;
 
-				/* Check if any of x/y min/max values needs to be updated. */
-				if( x > labelsInfoArray[currentHighestLabel].x_max )
-				{
-					labelsInfoArray[currentHighestLabel].x_max = x;
-				}
-				else if( x < labelsInfoArray[currentHighestLabel].x_min )
-				{
-					labelsInfoArray[currentHighestLabel].x_min = x;
-				}
+				/* Set number of pixels with new label to 1 since it is new */
+				labelsInfoArray[label].numberOfPixels = 1;
 
-				if( y > labelsInfoArray[currentHighestLabel].y_max )
-				{
-					labelsInfoArray[currentHighestLabel].y_max = y;
-				}
-				else if( y < labelsInfoArray[currentHighestLabel].y_min )
-				{
-					labelsInfoArray[currentHighestLabel].y_min = y;
-				}
+				/* Initalize x/y min/max values for new pixel in order to be able
+				 * to determine those values for bounding box.*/
+				labelsInfoArray[label].x_min = x;
+				labelsInfoArray[label].x_max = x;
+				labelsInfoArray[label].y_min = y;
+				labelsInfoArray[label].y_max = y;
 			}
+
+			/* Check if any of x/y min/max values needs to be updated. */
+			if( x > labelsInfoArray[label].x_max )
+			{
+				labelsInfoArray[label].x_max = x;
+			}
+			else if( x < labelsInfoArray[label].x_min )
+			{
+				labelsInfoArray[label].x_min = x;
+			}
+
+			if( y > labelsInfoArray[label].y_max )
+			{
+				labelsInfoArray[label].y_max = y;
+			}
+			else if( y < labelsInfoArray[label].y_min )
+			{
+				labelsInfoArray[label].y_min = y;
+			}
+
 		} /* END OF LABELING */
 	}
 
-	if(ProxSensor_Config.labelingActive)
+	if(ProxSensor_Config.labelingActive && ProxSensor_Config.removingSmallObjectsActive)
 	{
 		/* REMOVE SMALL OBJECTS */
 		for(uint16_t y = 0; y < CAM_IMG_HEIGHT; ++y)
@@ -232,7 +226,7 @@ void performOperationsOnFrame(uint32_t frameBufferAddr)
 				/* If number of pixels with given label is smaller
 				 * than threshold value, this pixel has to be set to
 				 * black color. */
-				if( labelsInfoArray[label].numberOfPixels < ProxSensor_Config.minNumberOfPixels_R )
+				if( !isLabelValid(label) )
 				{
 					ImgPtr[y][x] = COLOR_BLACK;
 				}
@@ -244,13 +238,20 @@ void performOperationsOnFrame(uint32_t frameBufferAddr)
 	/* Draw a bounding box around each of detected objects. */
 	for(uint8_t i = 1; i <= currentHighestLabel; ++i )
 	{
-		LCD_drawRectangle(labelsInfoArray[i].x_min,
-						  labelsInfoArray[i].y_min,
-						  labelsInfoArray[i].x_max,
-						  labelsInfoArray[i].y_max,
-						  0
-						  );
+		if(isLabelValid(i))
+		{
+			LCD_drawRectangle(labelsInfoArray[i].x_min,
+							  labelsInfoArray[i].y_min,
+							  labelsInfoArray[i].x_max,
+							  labelsInfoArray[i].y_max,
+							  0
+							  );
+			}
 	}
+}
 
-	RESET_DEBUG_PIN2;
+
+static inline uint8_t isLabelValid(uint16_t labelNumber)
+{
+	return labelsInfoArray[labelNumber].numberOfPixels >= ProxSensor_Config.minNumberOfPixels_R;
 }

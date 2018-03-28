@@ -53,6 +53,9 @@ typedef struct
 	/* Flag to turn on and off labeling feature. */
 	uint8_t labelingActive;
 
+	/* Flag to turn on and off removing small objects from BW image. */
+	uint8_t removingSmallObjectsActive;
+
 	/* Flag to turn on and off using float numbers
 	 * to calculate greyscale image. */
 	uint8_t floatOn;

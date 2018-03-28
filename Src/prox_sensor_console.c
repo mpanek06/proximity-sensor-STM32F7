@@ -49,6 +49,7 @@ void ProxSensor_Console_SetDetectedColor( char* arg );
 void ProxSensor_Console_ToggleAlgo( char* arg );
 void ProxSensor_Console_ToggleHalfScreen( char* arg );
 void ProxSensor_Console_ToggleLabeling( char* arg );
+void ProxSensor_Console_ToggleRemovingSmallObjects( char* arg );
 void ProxSensor_Console_CurrParams( char* arg );
 void ProxSensor_Console_PrintDebugDataOnUSB( char* arg );
 void ProxSensor_Console_ShowHelp( char* arg );
@@ -77,6 +78,7 @@ ProxSensor_CommandEntry_T ProxSensor_consoleOptions[ PROX_SENSOR_NO_OF_OPTIONS ]
 		{ 'd', "Display current parameters",             ProxSensor_Console_CurrParams },
 		{ 'e', "Print labels array",            ProxSensor_Console_PrintDebugDataOnUSB },
 		{ 'f', "Toggle using FPU mode",                 ProxSensor_Console_ToggleFloat },
+		{ 'g', "Toggle rem small objs",  ProxSensor_Console_ToggleRemovingSmallObjects },
 		{ 'h', "Display this menu",                        ProxSensor_Console_ShowHelp },
 		{ 'l', "Toggle live mode",                   ProxSensor_Console_ToggleLiveMode },
 		{ 'r', "Restart STM32 uC",                        ProxSensor_Console_RestartuC },
@@ -93,7 +95,7 @@ static void getArgFromCommandString( char* command, char* arg );
 /* Line separator used in data sent to terminal */
 static const char lineSeparator[] = "\r\n";
 /* Start sequence send before image frame data */
-static const char imgFrameStartSeq[] = "**";
+static const char imgFrameStartSeq[] = "##";
 /* Stopt sequence send after image frame data */
 static const char imgFrameStopSeq[] = "##";
 /* Flag set to true when data has been received on diag port (USB) */
@@ -217,6 +219,11 @@ void ProxSensor_Console_ToggleHalfScreen( char* arg )
 void ProxSensor_Console_ToggleLabeling( char* arg )
 {
 	ProxSensor_Config.labelingActive ^= 1;
+}
+
+void ProxSensor_Console_ToggleRemovingSmallObjects( char* arg )
+{
+	ProxSensor_Config.removingSmallObjectsActive ^= 1;
 }
 
 void ProxSensor_Console_SetDetectedColor( char* arg )

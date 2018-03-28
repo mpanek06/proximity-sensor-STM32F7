@@ -189,7 +189,13 @@ int main(void)
 
   LTDC_Init(FRAME_BUFFER, 80, 0, CAM_IMG_WIDTH, CAM_IMG_HEIGHT);
   BSP_SDRAM_Init();
+
+#ifdef CAM_R_QVGA
   CAMERA_Init(CAMERA_R320x240);
+#elif defined CAM_R_QQVGA
+  CAMERA_Init(CAMERA_R160x120);
+#endif
+
   //Delay for the camera to output correct data
   HAL_Delay(1000);
   Im_size = CAM_IMG_WIDTH * CAM_IMG_HEIGHT * 2 / 4;
@@ -465,7 +471,6 @@ void showLayer(uint8_t layer_no)
 
 void perform()
 {
-	SET_DEBUG_PIN4;
 	static uint8_t layer = 0;
 	uint32_t addr = FRAME_BUFFER;
 
@@ -481,11 +486,15 @@ void perform()
 		addr = FRAME_BUFFER_2;
 	}
 
+	SET_DEBUG_PIN4;
 	HAL_DCMI_Start_DMA(&hdcmi, DCMI_MODE_SNAPSHOT, addr, Im_size);
 	HAL_DCMI_Stop(&hdcmi);
-
-	ProxSensor_Perform(addr);
 	RESET_DEBUG_PIN4;
+
+	SET_DEBUG_PIN2;
+	ProxSensor_Perform(addr);
+	RESET_DEBUG_PIN2;
+
 }
 
 /* USER CODE END 4 */
