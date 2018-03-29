@@ -30,6 +30,9 @@
 #define COLOR_GREEN 0x07E0
 #define COLOR_BLUE  0x001F
 
+#define  NO_LABEL          0
+#define  MAX_NUM_OF_LABELS 1000
+
 typedef enum
 {
 	/* Only red objects are taken into account */

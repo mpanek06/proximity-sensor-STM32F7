@@ -6,9 +6,6 @@
 
 #include "usbd_cdc_if.h"
 
-#define  NO_LABEL          0
-#define  MAX_NUM_OF_LABELS 400
-
 ProxSensor_Config_T       ProxSensor_Config;
 ProxSensor_CurrentState_T ProxSensor_CurrentState;
 
@@ -148,19 +145,29 @@ void performOperationsOnFrame(uint32_t frameBufferAddr)
 			y = i / CAM_IMG_WIDTH;
 			x = i - ( y * CAM_IMG_WIDTH );
 
+			/* If pixel to tht North and to the West are labeled but with different labels
+			 * they need to be merged as they belong to the same object, */
 			if( labelsArray[y-1][x] != NO_LABEL && labelsArray[y][x-1] != NO_LABEL
 					&& labelsArray[y-1][x] != labelsArray[y][x-1] )
 			{
-				label = labelsArray[y][x-1];
-
-				labelsInfoArray[labelsArray[y-1][x]].numberOfPixels -= 1;
+				/* Get min label */
+				if( labelsArray[y][x-1] < labelsArray[y-1][x])
+				{
+					label = labelsArray[y][x-1];
+					labelsInfoArray[labelsArray[y-1][x]].numberOfPixels -= 1;
+					labelsArray[y-1][x] = label;
+				}
+				else
+				{
+					label = labelsArray[y-1][x];
+					labelsInfoArray[labelsArray[y][x-1]].numberOfPixels -= 1;
+					labelsArray[y][x-1] = label;
+				}
 
 				labelsArray[y][x] = label;
-				labelsArray[y-1][x] = label;
-
 				labelsInfoArray[label].numberOfPixels += 2;
 			}
-			else if( labelsArray[y][x-1] != NO_LABEL )
+			else if( labelsArray[y][x-1] != NO_LABEL && labelsArray[y][x-1] <= labelsArray[y-1][x] )
 			{
 				label = labelsArray[y][x-1];
 				labelsArray[y][x] = label;
