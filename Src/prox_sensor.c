@@ -243,7 +243,7 @@ void performOperationsOnFrame(uint32_t frameBufferAddr)
 	} /* END OF REMOVE SMALL OBJECTS */
 
 	/* Draw a bounding box around each of detected objects. */
-	for(uint8_t i = 1; i <= currentHighestLabel; ++i )
+	for(uint16_t i = 1; i <= currentHighestLabel; ++i )
 	{
 		if(isLabelValid(i))
 		{
