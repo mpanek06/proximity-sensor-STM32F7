@@ -50,17 +50,6 @@ uint8_t ProxSensor_Perform(uint32_t frameBufferAddr)
 		ProxSensor_Console_SendImgUSB(NULL);
 	}
 
-	if(ProxSensor_Config.halfScreenMode)
-	{
-		/* If half screen mode is on, perform processing
-		 * only on the half of the width of the image. */
-		processingWidth = CAM_IMG_WIDTH/2;
-	}
-	else
-	{
-		processingWidth = CAM_IMG_WIDTH;
-	}
-
 	if(ProxSensor_Config.algoActive)
 	{
 		performOperationsOnFrame(frameBufferAddr);
@@ -145,7 +134,7 @@ void performOperationsOnFrame(uint32_t frameBufferAddr)
 			y = i / CAM_IMG_WIDTH;
 			x = i - ( y * CAM_IMG_WIDTH );
 
-			/* If pixel to tht North and to the West are labeled but with different labels
+			/* If pixel to the North and to the West are labeled but with different labels
 			 * they need to be merged as they belong to the same object, */
 			if( labelsArray[y-1][x] != NO_LABEL && labelsArray[y][x-1] != NO_LABEL
 					&& labelsArray[y-1][x] != labelsArray[y][x-1] )
@@ -153,25 +142,35 @@ void performOperationsOnFrame(uint32_t frameBufferAddr)
 				/* Get min label */
 				if( labelsArray[y][x-1] < labelsArray[y-1][x])
 				{
+					/* Pixel to the West has the smallest label number so
+					 * we will use this label for current and North pixel as well. */
 					label = labelsArray[y][x-1];
+					/* Since we remove pixel y-1 from its current label group
+					 * we need to decrease number of pixels in this "old" group.*/
 					labelsInfoArray[labelsArray[y-1][x]].numberOfPixels -= 1;
 					labelsArray[y-1][x] = label;
 				}
 				else
 				{
+					/* Pixel to the North has the smallest label number so
+					 * we will use this label for current and West pixel as well. */
 					label = labelsArray[y-1][x];
+					/* Since we remove pixel x-1 from its current label group
+					 * we need to decrease number of pixels in this "old" group.*/
 					labelsInfoArray[labelsArray[y][x-1]].numberOfPixels -= 1;
 					labelsArray[y][x-1] = label;
 				}
 
 				labelsArray[y][x] = label;
+				/* Label whose value is stored in label variable has been assigned to
+				 * two new pixels so we add number two to the number of pixels for this label. */
 				labelsInfoArray[label].numberOfPixels += 2;
 			}
-			else if( labelsArray[y][x-1] != NO_LABEL && labelsArray[y][x-1] <= labelsArray[y-1][x] )
+			else if( labelsArray[y][x-1] != NO_LABEL )
 			{
 				label = labelsArray[y][x-1];
 				labelsArray[y][x] = label;
-				labelsArray[y][x] = labelsArray[y][x-1];
+				labelsInfoArray[label].numberOfPixels += 1;
 			}
 			else if( labelsArray[y-1][x] != NO_LABEL )
 			{
@@ -181,14 +180,17 @@ void performOperationsOnFrame(uint32_t frameBufferAddr)
 			}
 			else
 			{
+				/* None of the neighbors has label assigned
+				 * so we need to create new one. */
 				label = ++currentHighestLabel;
 				labelsArray[y][x] = label;
 
-				/* Set number of pixels with new label to 1 since it is new */
+				/* Set number of pixels with new label to 1
+				 * since it is assigned to only one pixel so far. */
 				labelsInfoArray[label].numberOfPixels = 1;
 
-				/* Initalize x/y min/max values for new pixel in order to be able
-				 * to determine those values for bounding box.*/
+				/* Initialize x/y min/max values for new pixel in order to be able
+				 * to determine those values later for bounding box.*/
 				labelsInfoArray[label].x_min = x;
 				labelsInfoArray[label].x_max = x;
 				labelsInfoArray[label].y_min = y;

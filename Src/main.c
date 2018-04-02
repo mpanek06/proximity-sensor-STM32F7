@@ -442,6 +442,9 @@ uint8_t CAMERA_Init(uint32_t Resolution) /*Camera initialization*/
 			HAL_DCMI_ConfigCROP(&hdcmi, 0, 0, 480, 272);
 		}
 		status = CAMERA_OK; /* Return CAMERA_OK status */
+
+		camera_driv->Config(CameraHwAddress, CAMERA_CONTRAST_BRIGHTNESS, CAMERA_CONTRAST_LEVEL2, CAMERA_BRIGHTNESS_LEVEL4);
+
 	}
 	else
 	{

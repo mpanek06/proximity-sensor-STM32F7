@@ -59,10 +59,6 @@ typedef struct
 	/* Flag to turn on and off removing small objects from BW image. */
 	uint8_t removingSmallObjectsActive;
 
-	/* Flag to turn on and off using float numbers
-	 * to calculate greyscale image. */
-	uint8_t floatOn;
-
 	/* Flag to turn on and off image output on USB. */
 	uint8_t usbOutOn;
 

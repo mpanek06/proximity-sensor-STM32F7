@@ -56,7 +56,6 @@ void ProxSensor_Console_ShowHelp( char* arg );
 void ProxSensor_Console_ToggleLiveMode( char* arg );
 void ProxSensor_Console_RestartuC( char* arg );
 void ProxSensor_Console_EnableOutputUSB( char* arg );
-void ProxSensor_Console_ToggleFloat( char* arg );
 
 //extern uint16_t FRAME_BUFFER[CAM_IMG_WIDTH][CAM_IMG_HEIGHT];
 extern uint16_t (*ImgPtr)[CAM_IMG_WIDTH];
@@ -77,7 +76,6 @@ ProxSensor_CommandEntry_T ProxSensor_consoleOptions[ PROX_SENSOR_NO_OF_OPTIONS ]
 		{ 'c', "Set detected color",               ProxSensor_Console_SetDetectedColor },
 		{ 'd', "Display current parameters",             ProxSensor_Console_CurrParams },
 		{ 'e', "Print labels array",            ProxSensor_Console_PrintDebugDataOnUSB },
-		{ 'f', "Toggle using FPU mode",                 ProxSensor_Console_ToggleFloat },
 		{ 'g', "Toggle rem small objs",  ProxSensor_Console_ToggleRemovingSmallObjects },
 		{ 'h', "Display this menu",                        ProxSensor_Console_ShowHelp },
 		{ 'l', "Toggle live mode",                   ProxSensor_Console_ToggleLiveMode },
@@ -121,8 +119,8 @@ extern UART_HandleTypeDef huart1;
 
 void ProxSensor_Console_Init()
 {
-	HAL_UART_Receive_IT(&huart1, (uint8_t*) RxBuff, 1);
 	HAL_UART_Transmit_IT(&huart1, (uint8_t*)startString, sizeof(startString));
+	HAL_UART_Receive_IT(&huart1, (uint8_t*) RxBuff, 1);
 }
 
 void ProxSensor_Console_Perform()
@@ -258,7 +256,6 @@ void ProxSensor_Console_CurrParams( char* arg )
 
 	sprintf(commandResponseBuff, "%s algoActive : %d %s", commandResponseBuff, ProxSensor_Config.algoActive, lineSeparator );
 	sprintf(commandResponseBuff, "%s labelingActive : %d %s", commandResponseBuff, ProxSensor_Config.labelingActive, lineSeparator );
-	sprintf(commandResponseBuff, "%s floatOn : %d %s", commandResponseBuff, ProxSensor_Config.floatOn, lineSeparator );
 
 	strcat(commandResponseBuff, lineSeparator);
 
@@ -353,11 +350,6 @@ void ProxSensor_Console_RestartuC( char* arg )
 void ProxSensor_Console_EnableOutputUSB( char* arg )
 {
 	ProxSensor_Config.usbOutOn ^= 1;
-}
-
-void ProxSensor_Console_ToggleFloat( char* arg )
-{
-	ProxSensor_Config.floatOn ^= 1;
 }
 
 void ProxSensor_Console_SendImgUSB( char* arg )
