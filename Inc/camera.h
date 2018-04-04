@@ -77,6 +77,8 @@ typedef struct
 }Camera_Config_T;
 
 uint8_t CAMERA_Init(uint32_t Resolution);
+void    CAMERA_SetBrightnessLevel(uint8_t val);
+void    CAMERA_SetContrastLevel(uint8_t val);
 
 #define CAMERA_R160x120                 0x00   /* QQVGA Resolution                     */
 #define CAMERA_R320x240                 0x01   /* QVGA Resolution                      */

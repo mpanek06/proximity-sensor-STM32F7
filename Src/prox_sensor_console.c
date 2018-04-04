@@ -9,10 +9,10 @@
 
 #include "prox_sensor_console.h"
 #include "prox_sensor.h"
+#include "camera.h"
 
 #include "usbd_cdc_if.h"
 #include "stm32f7xx_hal.h"
-
 
 #define PROX_SENSOR_MENU_ITEM_DESC_LENGTH     40
 #define PROX_SENSOR_NO_OF_OPTIONS             30
@@ -46,6 +46,9 @@ void ProxSensor_Console_SetNoOfPixels_B( char* arg );
 
 void ProxSensor_Console_SetDetectedColor( char* arg );
 
+void ProxSensor_Console_SetBrightness( char* arg );
+void ProxSensor_Console_SetContrast( char* arg );
+
 void ProxSensor_Console_ToggleAlgo( char* arg );
 void ProxSensor_Console_ToggleHalfScreen( char* arg );
 void ProxSensor_Console_ToggleLabeling( char* arg );
@@ -78,6 +81,8 @@ ProxSensor_CommandEntry_T ProxSensor_consoleOptions[ PROX_SENSOR_NO_OF_OPTIONS ]
 		{ 'e', "Print labels array",            ProxSensor_Console_PrintDebugDataOnUSB },
 		{ 'g', "Toggle rem small objs",  ProxSensor_Console_ToggleRemovingSmallObjects },
 		{ 'h', "Display this menu",                        ProxSensor_Console_ShowHelp },
+		{ 'i', "Set brightness",                      ProxSensor_Console_SetBrightness },
+		{ 'j', "Set contrast",                          ProxSensor_Console_SetContrast },
 		{ 'l', "Toggle live mode",                   ProxSensor_Console_ToggleLiveMode },
 		{ 'r', "Restart STM32 uC",                        ProxSensor_Console_RestartuC },
 		{ 's', "Toggle labeling",                    ProxSensor_Console_ToggleLabeling },
@@ -204,6 +209,21 @@ void ProxSensor_Console_SetNoOfPixels_B( char* arg )
 	ProxSensor_Config.minNumberOfPixels_B = atoi(arg);
 }
 
+void ProxSensor_Console_SetBrightness( char* arg )
+{
+	int8_t val = atoi(arg);
+	CAMERA_SetBrightnessLevel( val );
+}
+
+void ProxSensor_Console_SetContrast( char* arg )
+{
+	int8_t val = atoi(arg);
+	/* Contrast levels in camera driver starts from 0x05 so
+	 * value of CAMERA_CONTRAST_LEVEL0 (0x05) is added to
+	 * value given by user. */
+	CAMERA_SetContrastLevel( val + CAMERA_CONTRAST_LEVEL0 );
+}
+
 void ProxSensor_Console_ToggleAlgo( char* arg )
 {
 	ProxSensor_Config.algoActive ^= 1;
@@ -297,7 +317,6 @@ void ProxSensor_Console_PrintDebugDataOnUSB( char* arg )
 
 	sendStringOnUSBPort(imgFrameStopSeq, strlen(imgFrameStopSeq));
 }
-
 
 void ProxSensor_Console_ShowHelp( char* arg )
 {
