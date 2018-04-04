@@ -21,6 +21,8 @@
 #define RESPONSE_BUFF_SIZE                    500
 #define LIVE_MODE_BUFF_SIZE					  500
 
+#define ASCII_BACKSPACE                       8
+
 typedef struct {
 	const char index;
 	const char desc[ PROX_SENSOR_MENU_ITEM_DESC_LENGTH ];
@@ -115,10 +117,13 @@ char commandResponseBuff[ RESPONSE_BUFF_SIZE ];
 char liveModeBuff[ LIVE_MODE_BUFF_SIZE ];
 /* Startup string */
 const char startString[] = "Proximity Sensor by Marcin Panek. 2018\n\r\n\r";
+/* String to name color bing detected. */
+const char detectedColorString[][6] = {"RGB", "Red", "Green", "Blue"};
 
 extern uint16_t labelsArray[CAM_IMG_HEIGHT][CAM_IMG_WIDTH];
 
 extern ProxSensor_Config_T ProxSensor_Config;
+extern Camera_Config_T     Camera_Config;
 extern ProxSensor_CurrentState_T ProxSensor_CurrentState;
 extern UART_HandleTypeDef huart1;
 
@@ -147,6 +152,14 @@ void ProxSensor_Console_Perform()
 			invokeCallbackForCommand(command);
 			/* Clear command buffer */
 			memset(command, 0, sizeof(command));
+		}
+		else if( RxBuff[strlen(RxBuff)-1] == ASCII_BACKSPACE )
+		{
+			/* Remove backspace char from buffer. */
+			command[strlen(command)-1] = 0;
+			/* Remove char that was the last char in buffer
+			 * before backspace was received. */
+			command[strlen(command)-1] = 0;
 		}
 
 		/* Clear Rx buffer */
@@ -260,20 +273,32 @@ void ProxSensor_Console_CurrParams( char* arg )
 
 	sprintf(commandResponseBuff, "Current parameters of algorithm: %s", lineSeparator );
 
-	sprintf(commandResponseBuff, "%s Detected color: %d %s", commandResponseBuff, ProxSensor_Config.detectedColor, lineSeparator );
+	sprintf(commandResponseBuff, "%s Pixels  R: %d    G: %d    B: %d %s", commandResponseBuff,
+                                                                       ProxSensor_Config.minNumberOfPixels_R,
+																       ProxSensor_Config.minNumberOfPixels_G,
+																       ProxSensor_Config.minNumberOfPixels_B,
+																       lineSeparator );
 
-	sprintf(commandResponseBuff, "%s Pixels R: %d %s", commandResponseBuff, ProxSensor_Config.minNumberOfPixels_R, lineSeparator );
-	sprintf(commandResponseBuff, "%s Pixels G: %d %s", commandResponseBuff, ProxSensor_Config.minNumberOfPixels_G, lineSeparator );
-	sprintf(commandResponseBuff, "%s Pixels B: %d %s", commandResponseBuff, ProxSensor_Config.minNumberOfPixels_B, lineSeparator );
+	sprintf(commandResponseBuff, "%s BWTh    R: %d    G: %d    B: %d %s", commandResponseBuff,
+                                                                     ProxSensor_Config.BwTh_R,
+                                                                     ProxSensor_Config.BwTh_G,
+                                                                     ProxSensor_Config.BwTh_B,
+																	 lineSeparator );
 
-	sprintf(commandResponseBuff, "%s BWTh R: %d %s", commandResponseBuff, ProxSensor_Config.BwTh_R, lineSeparator );
-	sprintf(commandResponseBuff, "%s BWTh G: %d %s", commandResponseBuff, ProxSensor_Config.BwTh_G, lineSeparator );
-	sprintf(commandResponseBuff, "%s BWTh B: %d %s", commandResponseBuff, ProxSensor_Config.BwTh_B, lineSeparator );
+	sprintf(commandResponseBuff, "%s GrCoef  R: %.2f  G: %.2f  B: %.2f  %s", commandResponseBuff,
+                                                                                 ProxSensor_Config.Grayscale_coeff_R,
+																				 ProxSensor_Config.Grayscale_coeff_G,
+																				 ProxSensor_Config.Grayscale_coeff_B,
+																				 lineSeparator );
 
-	sprintf(commandResponseBuff, "%s Grayscale coeff R: %f %s", commandResponseBuff, ProxSensor_Config.Grayscale_coeff_R, lineSeparator );
-	sprintf(commandResponseBuff, "%s Grayscale coeff G: %f %s", commandResponseBuff, ProxSensor_Config.Grayscale_coeff_G, lineSeparator );
-	sprintf(commandResponseBuff, "%s Grayscale coeff B: %f %s", commandResponseBuff, ProxSensor_Config.Grayscale_coeff_B, lineSeparator );
+	strcat(commandResponseBuff, lineSeparator);
 
+	sprintf(commandResponseBuff, "%s Brigh: %d %s", commandResponseBuff, Camera_Config.brightnessLevel, lineSeparator );
+	sprintf(commandResponseBuff, "%s Contr: %d %s", commandResponseBuff, Camera_Config.contrastLevel-CAMERA_CONTRAST_LEVEL0, lineSeparator );
+
+	strcat(commandResponseBuff, lineSeparator);
+
+	sprintf(commandResponseBuff, "%s Detected color: %s %s", commandResponseBuff, detectedColorString[ProxSensor_Config.detectedColor], lineSeparator );
 	sprintf(commandResponseBuff, "%s algoActive : %d %s", commandResponseBuff, ProxSensor_Config.algoActive, lineSeparator );
 	sprintf(commandResponseBuff, "%s labelingActive : %d %s", commandResponseBuff, ProxSensor_Config.labelingActive, lineSeparator );
 
