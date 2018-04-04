@@ -53,6 +53,7 @@
 #include "ov9655.h"
 #include "rk043fn48h.h"
 #include "fonts.h"
+#include "camera.h"
 
 #include "prox_sensor.h"
 #include "prox_sensor_console.h"
@@ -62,15 +63,6 @@
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-
-typedef enum
-{
-	CAMERA_OK = 0x00,
-	CAMERA_ERROR = 0x01,
-	CAMERA_TIMEOUT = 0x02,
-	CAMERA_NOT_DETECTED = 0x03,
-	CAMERA_NOT_SUPPORTED = 0x04
-} Camera_StatusTypeDef;
 
 typedef struct
 {
@@ -91,9 +83,6 @@ static LCD_DrawPropTypeDef DrawProp[2];
 LTDC_HandleTypeDef hltdc;
 LTDC_LayerCfgTypeDef layer_cfg;
 static RCC_PeriphCLKInitTypeDef periph_clk_init_struct;
-CAMERA_DrvTypeDef *camera_driv;
-/* Camera module I2C HW address */
-static uint32_t CameraHwAddress;
 
 /* Image size */
 uint32_t Im_size = 0;
@@ -106,7 +95,6 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 
-uint8_t CAMERA_Init(uint32_t );
 static void LTDC_Init(uint32_t , uint16_t , uint16_t , uint16_t, uint16_t);
 void LCD_GPIO_Init(LTDC_HandleTypeDef *, void *);
 
@@ -415,43 +403,6 @@ static void LTDC_Init(uint32_t FB_Address, uint16_t Xpos, uint16_t Ypos, uint16_
 	DrawProp[1].BackColor = ((uint32_t)0xFFFFFFFF);
 	DrawProp[1].pFont = &Font24;
 	DrawProp[1].TextColor = ((uint32_t)0xFF000000);
-}
-
-uint8_t CAMERA_Init(uint32_t Resolution) /*Camera initialization*/
-{
-	uint8_t status = CAMERA_ERROR;
-	/* Read ID of Camera module via I2C */
-	if(ov9655_ReadID(CAMERA_I2C_ADDRESS) == OV9655_ID)
-	{
-		camera_driv = &ov9655_drv;/* Initialize the camera driver structure */
-		CameraHwAddress = CAMERA_I2C_ADDRESS;
-
-		if (Resolution == CAMERA_R160x120)
-		{
-			camera_driv->Init(CameraHwAddress, Resolution);
-			HAL_DCMI_DisableCROP(&hdcmi);
-		}
-		else if (Resolution == CAMERA_R320x240)
-		{
-			camera_driv->Init(CameraHwAddress, Resolution);
-			HAL_DCMI_DisableCROP(&hdcmi);
-		}
-		else if (Resolution == CAMERA_R640x480)
-		{
-			camera_driv->Init(CameraHwAddress, Resolution);
-			HAL_DCMI_ConfigCROP(&hdcmi, 0, 0, 480, 272);
-		}
-		status = CAMERA_OK; /* Return CAMERA_OK status */
-
-		camera_driv->Config(CameraHwAddress, CAMERA_CONTRAST_BRIGHTNESS, CAMERA_CONTRAST_LEVEL2, CAMERA_BRIGHTNESS_LEVEL4);
-
-	}
-	else
-	{
-		status = CAMERA_NOT_SUPPORTED; /* Return CAMERA_NOT_SUPPORTED status */
-	}
-
-	return status;
 }
 
 void showLayer(uint8_t layer_no)

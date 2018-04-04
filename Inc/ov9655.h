@@ -132,8 +132,6 @@ void     CAMERA_IO_Write(uint8_t addr, uint8_t reg, uint8_t value);
 uint8_t  CAMERA_IO_Read(uint8_t addr, uint8_t reg);
 void     CAMERA_Delay(uint32_t delay);
 
-/* CAMERA driver structure */
-extern CAMERA_DrvTypeDef   ov9655_drv;
 /**
   * @}
   */    

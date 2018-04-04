@@ -46,44 +46,38 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include <stdint.h>
+#include "stm32746g_discovery.h"
 
-/** @addtogroup BSP
-  * @{
-  */
+typedef enum
+{
+  CAMERA_OK = 0x00,
+  CAMERA_ERROR = 0x01,
+  CAMERA_TIMEOUT = 0x02,
+  CAMERA_NOT_DETECTED = 0x03,
+  CAMERA_NOT_SUPPORTED = 0x04
+}Camera_StatusTypeDef;
 
-/** @addtogroup Components
-  * @{
-  */
-    
-/** @addtogroup CAMERA
-  * @{
-  */
-
-
-/** @defgroup CAMERA_Exported_Types
-  * @{
-  */ 
-
-/** @defgroup CAMERA_Driver_structure  Camera Driver structure
-  * @{
-  */
 typedef struct
 {
   void     (*Init)(uint16_t, uint32_t);
   uint16_t (*ReadID)(uint16_t);  
   void     (*Config)(uint16_t, uint32_t, uint32_t, uint32_t);
 }CAMERA_DrvTypeDef;
-/**
-  * @}
-  */
 
-/**
-  * @}
-  */
+typedef struct
+{
+	/* Camera resolution - use one of constants defined below. */
+	uint8_t resolution;
 
-/** @defgroup CAMERA_Exported_Constants
-  * @{
-  */
+	/* Camera contrast level - use one of constants defined below. */
+	uint8_t contrastLevel;
+
+	/* Camera brightness level - use one of constants defined below. */
+	uint8_t brightnessLevel;
+}Camera_Config_T;
+
+uint8_t CAMERA_Init(uint32_t Resolution);
+
 #define CAMERA_R160x120                 0x00   /* QQVGA Resolution                     */
 #define CAMERA_R320x240                 0x01   /* QVGA Resolution                      */
 #define CAMERA_R480x272                 0x02   /* 480x272 Resolution                   */
@@ -115,22 +109,6 @@ typedef struct
 #define CAMERA_COLOR_EFFECT_GREEN       0x02   /* Green effect                */
 #define CAMERA_COLOR_EFFECT_RED         0x03   /* Red effect                  */
 #define CAMERA_COLOR_EFFECT_ANTIQUE     0x04   /* Antique effect              */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
 
 #ifdef __cplusplus
 }
