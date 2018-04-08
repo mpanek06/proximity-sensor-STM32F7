@@ -81,6 +81,8 @@ void performOperationsOnFrame(uint32_t frameBufferAddr)
 	float    val_g               = 0;
 	float    val_b               = 0;
 
+	char     layerIdStr[4]       = {0};
+
 	memset(labelsArray, 0, sizeof(labelsArray));
 	memset(labelsInfoArray, 0, sizeof(labelsInfoArray));
 
@@ -244,18 +246,24 @@ void performOperationsOnFrame(uint32_t frameBufferAddr)
 		}
 	} /* END OF REMOVE SMALL OBJECTS */
 
-	/* Draw a bounding box around each of detected objects. */
+	/* Put on screen information. */
 	for(uint16_t i = 1; i <= currentHighestLabel; ++i )
 	{
 		if(isLabelValid(i))
 		{
-			LCD_drawRectangle(labelsInfoArray[i].x_min,
-							  labelsInfoArray[i].y_min,
-							  labelsInfoArray[i].x_max,
-							  labelsInfoArray[i].y_max,
-							  0
-							  );
-			}
+			uint16_t x_min = labelsInfoArray[i].x_min;
+			uint16_t x_max = labelsInfoArray[i].x_max;
+			uint16_t y_min = labelsInfoArray[i].y_min;
+			uint16_t y_max = labelsInfoArray[i].y_max;
+
+			/* Draw a bounding box around each of detected objects. */
+			LCD_drawRectangle(x_min, y_min, x_max, y_max, 0);
+
+			/* Put text info in bounding box. */
+			memset(layerIdStr, 0, 4);
+			itoa(i, layerIdStr, 10);
+			LCD_putString( x_min, y_min + 10, (uint8_t *) layerIdStr, 0 );
+		}
 	}
 }
 

@@ -25,8 +25,8 @@ uint8_t CAMERA_Init(uint32_t Resolution) /*Camera initialization*/
 		camera_driv = &ov9655_drv;/* Initialize the camera driver structure */
 		CameraHwAddress = CAMERA_I2C_ADDRESS;
 
-		Camera_Config.brightnessLevel = CAMERA_BRIGHTNESS_LEVEL2;
-		Camera_Config.contrastLevel   = CAMERA_CONTRAST_LEVEL2;
+		Camera_Config.brightnessLevel = CAMERA_BRIGHTNESS_LEVEL4;
+		Camera_Config.contrastLevel   = CAMERA_CONTRAST_LEVEL0;
 		Camera_Config.resolution      = Resolution;
 
 		if (Resolution == CAMERA_R160x120)
@@ -46,7 +46,7 @@ uint8_t CAMERA_Init(uint32_t Resolution) /*Camera initialization*/
 		}
 		status = CAMERA_OK; /* Return CAMERA_OK status */
 
-		camera_driv->Config(CameraHwAddress, CAMERA_CONTRAST_BRIGHTNESS, CAMERA_CONTRAST_LEVEL2, CAMERA_BRIGHTNESS_LEVEL4);
+		camera_driv->Config(CameraHwAddress, Camera_Config.brightnessLevel, Camera_Config.contrastLevel, CAMERA_BRIGHTNESS_LEVEL4);
 
 	}
 	else
