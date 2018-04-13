@@ -34,6 +34,10 @@ struct {
 	uint8_t liveOutputEnabled;
 } ProxSensor_ConsoleConfig;
 
+void ProxSensor_Console_SetBwTh_HSV_H( char* arg );
+void ProxSensor_Console_SetBwTh_HSV_S( char* arg );
+void ProxSensor_Console_SetBwTh_HSV_V( char* arg );
+
 void ProxSensor_Console_SetBwTh_R( char* arg );
 void ProxSensor_Console_SetBwTh_G( char* arg );
 void ProxSensor_Console_SetBwTh_B( char* arg );
@@ -68,11 +72,11 @@ extern uint16_t (*ImgPtr)[CAM_IMG_WIDTH];
 ProxSensor_CommandEntry_T ProxSensor_consoleOptions[ PROX_SENSOR_NO_OF_OPTIONS ] =
 {
 		{ '1', "BwTh_R",     	                          ProxSensor_Console_SetBwTh_R },
-		{ '2', "BwTh_G",     	                          ProxSensor_Console_SetBwTh_G },
-		{ '3', "BwTh_B",     	                          ProxSensor_Console_SetBwTh_B },
-		{ '4', "Grayscale_coeff_R",        	           ProxSensor_Console_SetGrCoeff_R },
-		{ '5', "Grayscale_coeff_G",        	           ProxSensor_Console_SetGrCoeff_G },
-		{ '6', "Grayscale_coeff_B",        	           ProxSensor_Console_SetGrCoeff_B },
+//		{ '2', "BwTh_G",     	                          ProxSensor_Console_SetBwTh_G },
+//		{ '3', "BwTh_B",     	                          ProxSensor_Console_SetBwTh_B },
+//		{ '4', "Grayscale_coeff_R",        	           ProxSensor_Console_SetGrCoeff_R },
+//		{ '5', "Grayscale_coeff_G",        	           ProxSensor_Console_SetGrCoeff_G },
+//		{ '6', "Grayscale_coeff_B",        	           ProxSensor_Console_SetGrCoeff_B },
 		{ '7', "NoOfPixels_R",     	                ProxSensor_Console_SetNoOfPixels_R },
 		{ '8', "NoOfPixels_G",     	                ProxSensor_Console_SetNoOfPixels_G },
 		{ '9', "NoOfPixels_B",     	                ProxSensor_Console_SetNoOfPixels_B },
@@ -90,6 +94,9 @@ ProxSensor_CommandEntry_T ProxSensor_consoleOptions[ PROX_SENSOR_NO_OF_OPTIONS ]
 		{ 's', "Toggle labeling",                    ProxSensor_Console_ToggleLabeling },
 		{ 'u', "Send one image frame via USB",           ProxSensor_Console_SendImgUSB },
 		{ 'o', "Enable output on USB",              ProxSensor_Console_EnableOutputUSB },
+		{ 'x', "BwTh_HSV_H",     	                  ProxSensor_Console_SetBwTh_HSV_H },
+		{ 'y', "BwTh_HSV_S",     	                  ProxSensor_Console_SetBwTh_HSV_S },
+		{ 'z', "BwTh_HSV_V",     	                  ProxSensor_Console_SetBwTh_HSV_V },
 };
 
 static void sendStringToDiagTerminal( char* buffer, size_t size );
@@ -175,6 +182,21 @@ void ProxSensor_Console_Perform()
 	}
 	/* Start listening for next data */
 	HAL_UART_Receive_IT(&huart1, (uint8_t*) RxBuff, 1);
+}
+
+void ProxSensor_Console_SetBwTh_HSV_H( char* arg )
+{
+	ProxSensor_Config.BwTh_HSV_H = atoi(arg);
+}
+
+void ProxSensor_Console_SetBwTh_HSV_S( char* arg )
+{
+	ProxSensor_Config.BwTh_HSV_S = atoi(arg);
+}
+
+void ProxSensor_Console_SetBwTh_HSV_V( char* arg )
+{
+	ProxSensor_Config.BwTh_HSV_V = atoi(arg);
 }
 
 void ProxSensor_Console_SetBwTh_R( char* arg )

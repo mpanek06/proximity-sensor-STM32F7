@@ -77,6 +77,11 @@ typedef struct
 	uint8_t BwTh_G;
 	uint8_t BwTh_B;
 
+	/* Threshold for image binarization in HSV cases. */
+	float BwTh_HSV_H;
+	float BwTh_HSV_S;
+	float BwTh_HSV_V;
+
 	/* Threshold for image binarization. */
 	float Grayscale_coeff_R;
 	float Grayscale_coeff_G;
