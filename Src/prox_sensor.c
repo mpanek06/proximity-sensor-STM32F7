@@ -15,6 +15,8 @@ ProxSensor_LabelInfo_T  labelsInfoArray[MAX_NUM_OF_LABELS] = {0};
 uint16_t                processingWidth = CAM_IMG_WIDTH;
 
 static void             performOperationsOnFrame(uint32_t frameBufferAddr);
+static void             performOperationsOnFrame_HSV(uint32_t frameBufferAddr);
+
 static inline uint8_t   isLabelValid(uint16_t labelNumber);
 
 void ProxSensor_Init(uint32_t frameBufferAddr)
@@ -37,9 +39,13 @@ void ProxSensor_Init(uint32_t frameBufferAddr)
 	ProxSensor_Config.BwTh_G = 19;
 	ProxSensor_Config.BwTh_B = 38;
 
-	ProxSensor_Config.BwTh_HSV_H = 80;
-	ProxSensor_Config.BwTh_HSV_S = 80;
-	ProxSensor_Config.BwTh_HSV_V = 80;
+	ProxSensor_Config.BwTh_low_HSV_H = 0;
+	ProxSensor_Config.BwTh_low_HSV_S = 0.3;
+	ProxSensor_Config.BwTh_low_HSV_V = 0.55;
+
+	ProxSensor_Config.BwTh_up_HSV_H = 1;
+	ProxSensor_Config.BwTh_up_HSV_S = 1;
+	ProxSensor_Config.BwTh_up_HSV_V = 1;
 
 	processingWidth = CAM_IMG_WIDTH;
 }
@@ -56,7 +62,7 @@ uint8_t ProxSensor_Perform(uint32_t frameBufferAddr)
 
 	if(ProxSensor_Config.algoActive)
 	{
-		performOperationsOnFrame(frameBufferAddr);
+		performOperationsOnFrame_HSV(frameBufferAddr);
 	}
 	else
 	{
@@ -327,7 +333,12 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 		hsv_delta = hsv_cmax - hsv_cmin;
 
 		/* Calculate H value of HSV */
-		if( hsv_cmax == hsv_r_normed )
+
+		if( 0 == hsv_delta )
+		{
+			hsv_h = 0;
+		}
+		else if( hsv_cmax == hsv_r_normed )
 		{
 			fraction = (hsv_g_normed - hsv_b_normed) / hsv_delta;
 			hsv_h = 60 * ( fraction % 6 );
@@ -355,13 +366,17 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 			hsv_s = 0;
 		}
 
-		/* Calculate S value of HSV */
-		hsv_s = hsv_cmax;
+		/* Calculate V value of HSV */
+		hsv_v = hsv_cmax;
 
 		/* Check if pixel color is within desired range */
-		if ( hsv_h >= ProxSensor_Config.BwTh_HSV_H
-		  && hsv_s >= ProxSensor_Config.BwTh_HSV_S
-		  && hsv_v >= ProxSensor_Config.BwTh_HSV_V )
+		if ( hsv_h >= ProxSensor_Config.BwTh_low_HSV_H
+		  && hsv_s >= ProxSensor_Config.BwTh_low_HSV_S
+		  && hsv_v >= ProxSensor_Config.BwTh_low_HSV_V
+
+		  && hsv_h <= ProxSensor_Config.BwTh_up_HSV_H
+		  && hsv_s <= ProxSensor_Config.BwTh_up_HSV_S
+		  && hsv_v <= ProxSensor_Config.BwTh_up_HSV_V )
 		{
 			*ptr = COLOR_RED;
 		}

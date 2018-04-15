@@ -34,76 +34,6 @@ struct {
 	uint8_t liveOutputEnabled;
 } ProxSensor_ConsoleConfig;
 
-void ProxSensor_Console_SetBwTh_HSV_H( char* arg );
-void ProxSensor_Console_SetBwTh_HSV_S( char* arg );
-void ProxSensor_Console_SetBwTh_HSV_V( char* arg );
-
-void ProxSensor_Console_SetBwTh_R( char* arg );
-void ProxSensor_Console_SetBwTh_G( char* arg );
-void ProxSensor_Console_SetBwTh_B( char* arg );
-
-void ProxSensor_Console_SetGrCoeff_R( char* arg );
-void ProxSensor_Console_SetGrCoeff_G( char* arg );
-void ProxSensor_Console_SetGrCoeff_B( char* arg );
-
-void ProxSensor_Console_SetNoOfPixels_R( char* arg );
-void ProxSensor_Console_SetNoOfPixels_G( char* arg );
-void ProxSensor_Console_SetNoOfPixels_B( char* arg );
-
-void ProxSensor_Console_SetDetectedColor( char* arg );
-
-void ProxSensor_Console_SetBrightness( char* arg );
-void ProxSensor_Console_SetContrast( char* arg );
-
-void ProxSensor_Console_ToggleAlgo( char* arg );
-void ProxSensor_Console_ToggleHalfScreen( char* arg );
-void ProxSensor_Console_ToggleLabeling( char* arg );
-void ProxSensor_Console_ToggleRemovingSmallObjects( char* arg );
-void ProxSensor_Console_CurrParams( char* arg );
-void ProxSensor_Console_PrintDebugDataOnUSB( char* arg );
-void ProxSensor_Console_ShowHelp( char* arg );
-void ProxSensor_Console_ToggleLiveMode( char* arg );
-void ProxSensor_Console_RestartuC( char* arg );
-void ProxSensor_Console_EnableOutputUSB( char* arg );
-
-//extern uint16_t FRAME_BUFFER[CAM_IMG_WIDTH][CAM_IMG_HEIGHT];
-extern uint16_t (*ImgPtr)[CAM_IMG_WIDTH];
-
-ProxSensor_CommandEntry_T ProxSensor_consoleOptions[ PROX_SENSOR_NO_OF_OPTIONS ] =
-{
-		{ '1', "BwTh_R",     	                          ProxSensor_Console_SetBwTh_R },
-//		{ '2', "BwTh_G",     	                          ProxSensor_Console_SetBwTh_G },
-//		{ '3', "BwTh_B",     	                          ProxSensor_Console_SetBwTh_B },
-//		{ '4', "Grayscale_coeff_R",        	           ProxSensor_Console_SetGrCoeff_R },
-//		{ '5', "Grayscale_coeff_G",        	           ProxSensor_Console_SetGrCoeff_G },
-//		{ '6', "Grayscale_coeff_B",        	           ProxSensor_Console_SetGrCoeff_B },
-		{ '7', "NoOfPixels_R",     	                ProxSensor_Console_SetNoOfPixels_R },
-		{ '8', "NoOfPixels_G",     	                ProxSensor_Console_SetNoOfPixels_G },
-		{ '9', "NoOfPixels_B",     	                ProxSensor_Console_SetNoOfPixels_B },
-		{ 'a', "Toggle algorithm",                       ProxSensor_Console_ToggleAlgo },
-		{ 'b', "Toggle half screen mode",          ProxSensor_Console_ToggleHalfScreen },
-		{ 'c', "Set detected color",               ProxSensor_Console_SetDetectedColor },
-		{ 'd', "Display current parameters",             ProxSensor_Console_CurrParams },
-		{ 'e', "Print labels array",            ProxSensor_Console_PrintDebugDataOnUSB },
-		{ 'g', "Toggle rem small objs",  ProxSensor_Console_ToggleRemovingSmallObjects },
-		{ 'h', "Display this menu",                        ProxSensor_Console_ShowHelp },
-		{ 'i', "Set brightness",                      ProxSensor_Console_SetBrightness },
-		{ 'j', "Set contrast",                          ProxSensor_Console_SetContrast },
-		{ 'l', "Toggle live mode",                   ProxSensor_Console_ToggleLiveMode },
-		{ 'r', "Restart STM32 uC",                        ProxSensor_Console_RestartuC },
-		{ 's', "Toggle labeling",                    ProxSensor_Console_ToggleLabeling },
-		{ 'u', "Send one image frame via USB",           ProxSensor_Console_SendImgUSB },
-		{ 'o', "Enable output on USB",              ProxSensor_Console_EnableOutputUSB },
-		{ 'x', "BwTh_HSV_H",     	                  ProxSensor_Console_SetBwTh_HSV_H },
-		{ 'y', "BwTh_HSV_S",     	                  ProxSensor_Console_SetBwTh_HSV_S },
-		{ 'z', "BwTh_HSV_V",     	                  ProxSensor_Console_SetBwTh_HSV_V },
-};
-
-static void sendStringToDiagTerminal( char* buffer, size_t size );
-static void sendStringOnUSBPort( const char* buffer, size_t size );
-static void invokeCallbackForCommand( char* command );
-static void getArgFromCommandString( char* command, char* arg );
-
 /* Line separator used in data sent to terminal */
 static const char lineSeparator[] = "\r\n";
 /* Start sequence send before image frame data */
@@ -134,10 +64,97 @@ extern Camera_Config_T     Camera_Config;
 extern ProxSensor_CurrentState_T ProxSensor_CurrentState;
 extern UART_HandleTypeDef huart1;
 
+void ProxSensor_Console_SetDetectedColor( char* arg );
+
+void ProxSensor_Console_SetBrightness( char* arg );
+void ProxSensor_Console_SetContrast( char* arg );
+
+void ProxSensor_Console_CurrParams( char* arg );
+void ProxSensor_Console_PrintDebugDataOnUSB( char* arg );
+void ProxSensor_Console_ShowHelp( char* arg );
+void ProxSensor_Console_ToggleLiveMode( char* arg );
+void ProxSensor_Console_RestartuC( char* arg );
+void ProxSensor_Console_EnableOutputUSB( char* arg );
+
+void ProxSensor_Console_SetBwTh_up_HSV_H( char* arg ){ ProxSensor_Config.BwTh_up_HSV_H = atof(arg);}
+void ProxSensor_Console_SetBwTh_up_HSV_S( char* arg ){ ProxSensor_Config.BwTh_up_HSV_S = atof(arg);}
+void ProxSensor_Console_SetBwTh_up_HSV_V( char* arg ){ ProxSensor_Config.BwTh_up_HSV_V = atof(arg);}
+
+void ProxSensor_Console_SetBwTh_low_HSV_H( char* arg ){	ProxSensor_Config.BwTh_low_HSV_H = atof(arg);}
+void ProxSensor_Console_SetBwTh_low_HSV_S( char* arg ){	ProxSensor_Config.BwTh_low_HSV_S = atof(arg);}
+void ProxSensor_Console_SetBwTh_low_HSV_V( char* arg ){ ProxSensor_Config.BwTh_low_HSV_V = atof(arg);}
+
+void ProxSensor_Console_SetBwTh_R( char* arg ){	ProxSensor_Config.BwTh_R = atoi(arg);}
+void ProxSensor_Console_SetBwTh_G( char* arg ){	ProxSensor_Config.BwTh_G = atoi(arg);}
+void ProxSensor_Console_SetBwTh_B( char* arg ){	ProxSensor_Config.BwTh_B = atoi(arg);}
+
+void ProxSensor_Console_SetGrCoeff_R( char* arg ){ ProxSensor_Config.Grayscale_coeff_R = atof(arg);}
+void ProxSensor_Console_SetGrCoeff_G( char* arg ){ ProxSensor_Config.Grayscale_coeff_G = atof(arg);}
+void ProxSensor_Console_SetGrCoeff_B( char* arg ){ ProxSensor_Config.Grayscale_coeff_B = atof(arg);}
+
+void ProxSensor_Console_SetNoOfPixels_R( char* arg ){ ProxSensor_Config.minNumberOfPixels_R = atoi(arg);}
+void ProxSensor_Console_SetNoOfPixels_G( char* arg ){ ProxSensor_Config.minNumberOfPixels_G = atoi(arg);}
+void ProxSensor_Console_SetNoOfPixels_B( char* arg ){ ProxSensor_Config.minNumberOfPixels_B = atoi(arg);}
+
+void ProxSensor_Console_ToggleAlgo( char* arg ){ ProxSensor_Config.algoActive ^= 1;}
+void ProxSensor_Console_ToggleHalfScreen( char* arg ){ ProxSensor_Config.halfScreenMode ^= 1;}
+void ProxSensor_Console_ToggleLabeling( char* arg ){ ProxSensor_Config.labelingActive ^= 1;}
+void ProxSensor_Console_ToggleRemovingSmallObjects( char* arg ){ ProxSensor_Config.removingSmallObjectsActive ^= 1;}
+
+//extern uint16_t FRAME_BUFFER[CAM_IMG_WIDTH][CAM_IMG_HEIGHT];
+extern uint16_t (*ImgPtr)[CAM_IMG_WIDTH];
+
+ProxSensor_CommandEntry_T ProxSensor_consoleOptions[ PROX_SENSOR_NO_OF_OPTIONS ] =
+{
+		{ '1', "BwTh_R",     	                          ProxSensor_Console_SetBwTh_R },
+//		{ '2', "BwTh_G",     	                          ProxSensor_Console_SetBwTh_G },
+//		{ '3', "BwTh_B",     	                          ProxSensor_Console_SetBwTh_B },
+//		{ '4', "Grayscale_coeff_R",        	           ProxSensor_Console_SetGrCoeff_R },
+//		{ '5', "Grayscale_coeff_G",        	           ProxSensor_Console_SetGrCoeff_G },
+//		{ '6', "Grayscale_coeff_B",        	           ProxSensor_Console_SetGrCoeff_B },
+		{ '7', "NoOfPixels_R",     	                ProxSensor_Console_SetNoOfPixels_R },
+		{ '8', "NoOfPixels_G",     	                ProxSensor_Console_SetNoOfPixels_G },
+		{ '9', "NoOfPixels_B",     	                ProxSensor_Console_SetNoOfPixels_B },
+		{ 'a', "Toggle algorithm",                       ProxSensor_Console_ToggleAlgo },
+		{ 'b', "Toggle half screen mode",          ProxSensor_Console_ToggleHalfScreen },
+		{ 'c', "Set detected color",               ProxSensor_Console_SetDetectedColor },
+		{ 'd', "Display current parameters",             ProxSensor_Console_CurrParams },
+		{ 'e', "Print labels array",            ProxSensor_Console_PrintDebugDataOnUSB },
+		{ 'g', "Toggle rem small objs",  ProxSensor_Console_ToggleRemovingSmallObjects },
+		{ 'h', "Display this menu",                        ProxSensor_Console_ShowHelp },
+		{ 'i', "Set brightness",                      ProxSensor_Console_SetBrightness },
+		{ 'j', "Set contrast",                          ProxSensor_Console_SetContrast },
+		{ 'l', "Toggle live mode",                   ProxSensor_Console_ToggleLiveMode },
+		{ 'r', "Restart STM32 uC",                        ProxSensor_Console_RestartuC },
+		{ 's', "Toggle labeling",                    ProxSensor_Console_ToggleLabeling },
+		{ 'u', "Send one image frame via USB",           ProxSensor_Console_SendImgUSB },
+		{ 'o', "Enable output on USB",              ProxSensor_Console_EnableOutputUSB },
+		{ 'x', "BwTh_HSV_H up",      	           ProxSensor_Console_SetBwTh_up_HSV_H },
+		{ 'y', "BwTh_HSV_S up",      	           ProxSensor_Console_SetBwTh_up_HSV_S },
+		{ 'z', "BwTh_HSV_V up",      	           ProxSensor_Console_SetBwTh_up_HSV_V },
+		{ '2', "BwTh_HSV_H low",     	          ProxSensor_Console_SetBwTh_low_HSV_H },
+		{ '3', "BwTh_HSV_S low",     	          ProxSensor_Console_SetBwTh_low_HSV_S },
+		{ '4', "BwTh_HSV_V low",     	          ProxSensor_Console_SetBwTh_low_HSV_V },
+};
+
+static void sendStringToDiagTerminal( char* buffer, size_t size );
+static void sendStringOnUSBPort( const char* buffer, size_t size );
+static void invokeCallbackForCommand( char* command );
+static void getArgFromCommandString( char* command, char* arg );
+
 void ProxSensor_Console_Init()
 {
 	HAL_UART_Transmit_IT(&huart1, (uint8_t*)startString, sizeof(startString));
-	HAL_UART_Receive_IT(&huart1, (uint8_t*) RxBuff, 1);
+	HAL_UART_Receive_IT(&huart1, (uint8_t*) RxBuff, 7);
+}
+
+uint8_t containsEnter( char* RxBuff )
+{
+	for(uint8_t i = 0; i<strlen(RxBuff); ++i)
+		if(RxBuff[i] == '\r' )
+			return 1;
+
+	return 0;
 }
 
 void ProxSensor_Console_Perform()
@@ -150,13 +167,27 @@ void ProxSensor_Console_Perform()
 		/* Echo received data */
 		HAL_UART_Transmit(&huart1, (uint8_t*) RxBuff, sizeof(RxBuff), 100);
 		/* If enter pressed try to invoke command */
-		if(RxBuff[strlen(RxBuff)-1] == '\r')
+		if( 1 == containsEnter(RxBuff))
 		{
 			/* Echo received data */
 			HAL_UART_Transmit(&huart1, (uint8_t*) lineSeparator, sizeof(lineSeparator), 100);
 
 			command[strlen(command)-1]  = 0;
-			invokeCallbackForCommand(command);
+
+			char *tmpPtr = command;
+			for(uint8_t i = 0; i<strlen(command); ++i)
+			{
+				if( command[i] == 0 )
+				{
+					++tmpPtr;
+				}
+				else
+				{
+					break;
+				}
+			}
+
+			invokeCallbackForCommand(tmpPtr);
 			/* Clear command buffer */
 			memset(command, 0, sizeof(command));
 		}
@@ -181,67 +212,7 @@ void ProxSensor_Console_Perform()
 		sendStringToDiagTerminal(liveModeBuff, strlen(liveModeBuff));
 	}
 	/* Start listening for next data */
-	HAL_UART_Receive_IT(&huart1, (uint8_t*) RxBuff, 1);
-}
-
-void ProxSensor_Console_SetBwTh_HSV_H( char* arg )
-{
-	ProxSensor_Config.BwTh_HSV_H = atoi(arg);
-}
-
-void ProxSensor_Console_SetBwTh_HSV_S( char* arg )
-{
-	ProxSensor_Config.BwTh_HSV_S = atoi(arg);
-}
-
-void ProxSensor_Console_SetBwTh_HSV_V( char* arg )
-{
-	ProxSensor_Config.BwTh_HSV_V = atoi(arg);
-}
-
-void ProxSensor_Console_SetBwTh_R( char* arg )
-{
-	ProxSensor_Config.BwTh_R = atoi(arg);
-}
-
-void ProxSensor_Console_SetBwTh_G( char* arg )
-{
-	ProxSensor_Config.BwTh_G = atoi(arg);
-}
-
-void ProxSensor_Console_SetBwTh_B( char* arg )
-{
-	ProxSensor_Config.BwTh_B = atoi(arg);
-}
-
-void ProxSensor_Console_SetGrCoeff_R( char* arg )
-{
-	ProxSensor_Config.Grayscale_coeff_R = atof(arg);
-}
-
-void ProxSensor_Console_SetGrCoeff_G( char* arg )
-{
-	ProxSensor_Config.Grayscale_coeff_G = atof(arg);
-}
-
-void ProxSensor_Console_SetGrCoeff_B( char* arg )
-{
-	ProxSensor_Config.Grayscale_coeff_B = atof(arg);
-}
-
-void ProxSensor_Console_SetNoOfPixels_R( char* arg )
-{
-	ProxSensor_Config.minNumberOfPixels_R = atoi(arg);
-}
-
-void ProxSensor_Console_SetNoOfPixels_G( char* arg )
-{
-	ProxSensor_Config.minNumberOfPixels_G = atoi(arg);
-}
-
-void ProxSensor_Console_SetNoOfPixels_B( char* arg )
-{
-	ProxSensor_Config.minNumberOfPixels_B = atoi(arg);
+	HAL_UART_Receive_IT(&huart1, (uint8_t*) RxBuff, 7);
 }
 
 void ProxSensor_Console_SetBrightness( char* arg )
@@ -257,26 +228,6 @@ void ProxSensor_Console_SetContrast( char* arg )
 	 * value of CAMERA_CONTRAST_LEVEL0 (0x05) is added to
 	 * value given by user. */
 	CAMERA_SetContrastLevel( val + CAMERA_CONTRAST_LEVEL0 );
-}
-
-void ProxSensor_Console_ToggleAlgo( char* arg )
-{
-	ProxSensor_Config.algoActive ^= 1;
-}
-
-void ProxSensor_Console_ToggleHalfScreen( char* arg )
-{
-	ProxSensor_Config.halfScreenMode ^= 1;
-}
-
-void ProxSensor_Console_ToggleLabeling( char* arg )
-{
-	ProxSensor_Config.labelingActive ^= 1;
-}
-
-void ProxSensor_Console_ToggleRemovingSmallObjects( char* arg )
-{
-	ProxSensor_Config.removingSmallObjectsActive ^= 1;
 }
 
 void ProxSensor_Console_SetDetectedColor( char* arg )
@@ -305,6 +256,18 @@ void ProxSensor_Console_CurrParams( char* arg )
                                                                      ProxSensor_Config.BwTh_R,
                                                                      ProxSensor_Config.BwTh_G,
                                                                      ProxSensor_Config.BwTh_B,
+																	 lineSeparator );
+
+	sprintf(commandResponseBuff, "%s BWThHSV H: %.2f  S: %.2f  V: %.2f %s", commandResponseBuff,
+                                                                     ProxSensor_Config.BwTh_low_HSV_H,
+                                                                     ProxSensor_Config.BwTh_low_HSV_S,
+                                                                     ProxSensor_Config.BwTh_low_HSV_V,
+																	 lineSeparator );
+
+	sprintf(commandResponseBuff, "%s BWThHSV H: %.2f  S: %.2f  V: %.2f %s", commandResponseBuff,
+                                                                     ProxSensor_Config.BwTh_up_HSV_H,
+                                                                     ProxSensor_Config.BwTh_up_HSV_S,
+                                                                     ProxSensor_Config.BwTh_up_HSV_V,
 																	 lineSeparator );
 
 	sprintf(commandResponseBuff, "%s GrCoef  R: %.2f  G: %.2f  B: %.2f  %s", commandResponseBuff,
