@@ -18,6 +18,8 @@ static void             performOperationsOnFrame(uint32_t frameBufferAddr);
 static void             performOperationsOnFrame_HSV(uint32_t frameBufferAddr);
 
 static inline uint8_t   isLabelValid(uint16_t labelNumber);
+static inline uint8_t   isPixelInRange( ProxSensor_HSV_Color_T *hsvColor );
+static inline void      convertRGB2HSV(uint8_t *val_r, uint8_t *val_g, uint8_t *val_b, ProxSensor_HSV_Color_T *hsvColor);
 
 void ProxSensor_Init(uint32_t frameBufferAddr)
 {
@@ -277,6 +279,8 @@ void performOperationsOnFrame(uint32_t frameBufferAddr)
 
 void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 {
+	ProxSensor_HSV_Color_T hsvColor;
+
 	uint16_t currentHighestLabel = 0U;
 	uint16_t label               = 0U;
 	uint32_t i                   = 0U;
@@ -288,14 +292,6 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 	uint8_t  val_r               = 0;
 	uint8_t  val_g               = 0;
 	uint8_t  val_b               = 0;
-
-	uint8_t  hsv_h               = 0;
-	uint8_t  hsv_s               = 0;
-	uint8_t  hsv_v               = 0;
-
-	uint8_t  hsv_cmin            = 0;
-	uint8_t  hsv_cmax            = 0;
-	uint8_t  hsv_delta           = 0;
 
 	char     layerIdStr[4]       = {0};
 
@@ -317,55 +313,10 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 		val_g = RGB565_GET_G(pixel);
 		val_b = RGB565_GET_B(pixel);
 
-		/* Convert current pixel into HSV */
-
-		hsv_cmax  = MAX(val_r, MAX(val_g, val_b));
-		hsv_cmin  = MIN(val_r, MIN(val_g, val_b));
-		hsv_delta = hsv_cmax - hsv_cmin;
-
-		/* Calculate V value of HSV */
-		hsv_v = hsv_cmax;
-
-		/* Calculate S value of HSV */
-		if( 0 != hsv_cmax )
-		{
-			hsv_s = 255 * (hsv_delta) / hsv_cmax;
-		}
-		else
-		{
-			hsv_s = 0;
-		}
-
-		/* Calculate H value of HSV */
-		if( 0 == hsv_delta )
-		{
-			hsv_h = 0;
-		}
-		else if( hsv_cmax == val_r )
-		{
-			hsv_h =   0 + 43 * (val_g - val_b) / hsv_delta;
-		}
-		else if( hsv_cmax == val_g )
-		{
-			hsv_h =  85 + 43 * (val_b - val_r) / hsv_delta;
-		}
-		else if( hsv_cmax == val_b )
-		{
-			hsv_h = 171 + 43 * (val_r - val_g) / hsv_delta;
-		}
-		else
-		{
-			hsv_h = 0;
-		}
+		convertRGB2HSV(&val_r, &val_g, &val_b, &hsvColor);
 
 		/* Check if pixel color is within desired range */
-		if ( hsv_h >= ProxSensor_Config.BwTh_low_HSV_H
-		  && hsv_s >= ProxSensor_Config.BwTh_low_HSV_S
-		  && hsv_v >= ProxSensor_Config.BwTh_low_HSV_V
-
-		  && hsv_h <= ProxSensor_Config.BwTh_up_HSV_H
-		  && hsv_s <= ProxSensor_Config.BwTh_up_HSV_S
-		  && hsv_v <= ProxSensor_Config.BwTh_up_HSV_V )
+		if (isPixelInRange(&hsvColor))
 		{
 			*ptr = COLOR_RED;
 		}
@@ -514,7 +465,72 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 	}
 }
 
+static inline uint8_t isPixelInRange( ProxSensor_HSV_Color_T *hsvColor )
+{
+	 return hsvColor->h >= ProxSensor_Config.BwTh_low_HSV_H
+		 && hsvColor->s >= ProxSensor_Config.BwTh_low_HSV_S
+		 && hsvColor->v >= ProxSensor_Config.BwTh_low_HSV_V
+
+		 && hsvColor->h <= ProxSensor_Config.BwTh_up_HSV_H
+		 && hsvColor->s <= ProxSensor_Config.BwTh_up_HSV_S
+		 && hsvColor->v <= ProxSensor_Config.BwTh_up_HSV_V;
+}
+
 static inline uint8_t isLabelValid(uint16_t labelNumber)
 {
 	return labelsInfoArray[labelNumber].numberOfPixels >= ProxSensor_Config.minNumberOfPixels_R;
+}
+
+static inline void convertRGB2HSV(uint8_t *val_r, uint8_t *val_g, uint8_t *val_b, ProxSensor_HSV_Color_T *hsvColor)
+{
+	uint8_t  hsv_cmin  = 0;
+	uint8_t  hsv_cmax  = 0;
+	uint8_t  hsv_delta = 0;
+
+	/* Convert current pixel into HSV */
+
+	hsv_cmax  = MAX(*val_r, MAX(*val_g, *val_b));
+	hsv_cmin  = MIN(*val_r, MIN(*val_g, *val_b));
+	hsv_delta = hsv_cmax - hsv_cmin;
+
+	/* Calculate V value of HSV */
+	hsvColor->v = hsv_cmax;
+
+	if( 0 == hsv_cmax )
+	{
+		hsvColor->h = 0;
+		hsvColor->s = 0;
+		return;
+	}
+
+	/* Calculate S value of HSV */
+	hsvColor->s = 255 * hsv_delta / hsv_cmax;
+
+	if( 0 == hsvColor->s )
+	{
+		hsvColor->h = 0;
+		return;
+	}
+
+	/* Calculate H value of HSV */
+	if( 0 == hsv_delta )
+	{
+		hsvColor->h = 0;
+	}
+	else if( hsv_cmax == *val_r )
+	{
+		hsvColor->h =   0 + 43 * (*val_g - *val_b) / hsv_delta;
+	}
+	else if( hsv_cmax == *val_g )
+	{
+		hsvColor->h =  85 + 43 * (*val_b - *val_r) / hsv_delta;
+	}
+	else if( hsv_cmax == *val_b )
+	{
+		hsvColor->h = 171 + 43 * (*val_r - *val_g) / hsv_delta;
+	}
+	else
+	{
+		hsvColor->h = 0;
+	}
 }

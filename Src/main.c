@@ -440,10 +440,10 @@ void perform()
 		addr = FRAME_BUFFER_2;
 	}
 
-	SET_DEBUG_PIN4;
+//	SET_DEBUG_PIN4;
 	HAL_DCMI_Start_DMA(&hdcmi, DCMI_MODE_SNAPSHOT, addr, Im_size);
 	HAL_DCMI_Stop(&hdcmi);
-	RESET_DEBUG_PIN4;
+//	RESET_DEBUG_PIN4;
 
 	SET_DEBUG_PIN2;
 	ProxSensor_Perform(addr);

@@ -108,6 +108,17 @@ typedef struct
 
 typedef struct
 {
+	/* Hue component of HSV representation. */
+	uint16_t h;
+	/* Saturation component of HSV representation. */
+	uint16_t s;
+	/* Value component of HSV representation. */
+	uint16_t v;
+
+}ProxSensor_HSV_Color_T;
+
+typedef struct
+{
 
 
 }ProxSensor_CurrentState_T;
