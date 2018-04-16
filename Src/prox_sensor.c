@@ -40,10 +40,10 @@ void ProxSensor_Init(uint32_t frameBufferAddr)
 	ProxSensor_Config.BwTh_B = 38;
 
 	ProxSensor_Config.BwTh_low_HSV_H = 0;
-	ProxSensor_Config.BwTh_low_HSV_S = 76;
-	ProxSensor_Config.BwTh_low_HSV_V = 140;
+	ProxSensor_Config.BwTh_low_HSV_S = 144;
+	ProxSensor_Config.BwTh_low_HSV_V = 196;
 
-	ProxSensor_Config.BwTh_up_HSV_H = 180;
+	ProxSensor_Config.BwTh_up_HSV_H = 255;
 	ProxSensor_Config.BwTh_up_HSV_S = 255;
 	ProxSensor_Config.BwTh_up_HSV_V = 255;
 
@@ -289,13 +289,13 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 	uint8_t  val_g               = 0;
 	uint8_t  val_b               = 0;
 
-	float    hsv_h               = 0;
-	float    hsv_s               = 0;
-	float    hsv_v               = 0;
+	uint8_t  hsv_h               = 0;
+	uint8_t  hsv_s               = 0;
+	uint8_t  hsv_v               = 0;
 
-	float    hsv_cmin            = 0;
-	float    hsv_cmax            = 0;
-	float    hsv_delta           = 0;
+	uint8_t  hsv_cmin            = 0;
+	uint8_t  hsv_cmax            = 0;
+	uint8_t  hsv_delta           = 0;
 
 	char     layerIdStr[4]       = {0};
 
@@ -329,7 +329,7 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 		/* Calculate S value of HSV */
 		if( 0 != hsv_cmax )
 		{
-			hsv_s = 255 * (hsv_cmax - hsv_cmin) / hsv_cmax;
+			hsv_s = 255 * (hsv_delta) / hsv_cmax;
 		}
 		else
 		{
