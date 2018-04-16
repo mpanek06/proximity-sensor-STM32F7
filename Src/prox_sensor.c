@@ -40,12 +40,12 @@ void ProxSensor_Init(uint32_t frameBufferAddr)
 	ProxSensor_Config.BwTh_B = 38;
 
 	ProxSensor_Config.BwTh_low_HSV_H = 0;
-	ProxSensor_Config.BwTh_low_HSV_S = 0.3;
-	ProxSensor_Config.BwTh_low_HSV_V = 0.55;
+	ProxSensor_Config.BwTh_low_HSV_S = 76;
+	ProxSensor_Config.BwTh_low_HSV_V = 140;
 
-	ProxSensor_Config.BwTh_up_HSV_H = 1;
-	ProxSensor_Config.BwTh_up_HSV_S = 1;
-	ProxSensor_Config.BwTh_up_HSV_V = 1;
+	ProxSensor_Config.BwTh_up_HSV_H = 180;
+	ProxSensor_Config.BwTh_up_HSV_S = 255;
+	ProxSensor_Config.BwTh_up_HSV_V = 255;
 
 	processingWidth = CAM_IMG_WIDTH;
 }
@@ -285,23 +285,17 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 
 	uint16_t *ptr                = (uint16_t*) frameBufferAddr;
 	uint16_t pixel               = 0U;
-	float    val_r               = 0;
-	float    val_g               = 0;
-	float    val_b               = 0;
+	uint8_t  val_r               = 0;
+	uint8_t  val_g               = 0;
+	uint8_t  val_b               = 0;
 
 	float    hsv_h               = 0;
 	float    hsv_s               = 0;
 	float    hsv_v               = 0;
 
-	float    hsv_r_normed        = 0;
-	float    hsv_g_normed        = 0;
-	float    hsv_b_normed        = 0;
-
 	float    hsv_cmin            = 0;
 	float    hsv_cmax            = 0;
 	float    hsv_delta           = 0;
-
-	uint16_t fraction            = 0;
 
 	char     layerIdStr[4]       = {0};
 
@@ -319,55 +313,50 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 		pixel = *ptr;
 
 		/* Get values of RGB colors for current pixel */
-		val_r = (float) RGB565_GET_R(pixel);
-		val_g = (float) RGB565_GET_G(pixel);
-		val_b = (float) RGB565_GET_B(pixel);
+		val_r = RGB565_GET_R(pixel);
+		val_g = RGB565_GET_G(pixel);
+		val_b = RGB565_GET_B(pixel);
 
 		/* Convert current pixel into HSV */
-		hsv_r_normed = val_r / 255;
-		hsv_g_normed = val_g / 255;
-		hsv_b_normed = val_b / 255;
 
-		hsv_cmax  = MAX(hsv_r_normed, MAX(hsv_g_normed, hsv_b_normed));
-		hsv_cmin  = MIN(hsv_r_normed, MIN(hsv_g_normed, hsv_b_normed));
+		hsv_cmax  = MAX(val_r, MAX(val_g, val_b));
+		hsv_cmin  = MIN(val_r, MIN(val_g, val_b));
 		hsv_delta = hsv_cmax - hsv_cmin;
 
-		/* Calculate H value of HSV */
-
-		if( 0 == hsv_delta )
-		{
-			hsv_h = 0;
-		}
-		else if( hsv_cmax == hsv_r_normed )
-		{
-			fraction = (hsv_g_normed - hsv_b_normed) / hsv_delta;
-			hsv_h = 60 * ( fraction % 6 );
-		}
-		else if( hsv_cmax == hsv_g_normed )
-		{
-			hsv_h = 60 * ( ( (hsv_b_normed - hsv_r_normed) / hsv_delta ) + 2 );
-		}
-		else if( hsv_cmax == hsv_b_normed )
-		{
-			hsv_h = 60 * ( ( (hsv_r_normed - hsv_g_normed) / hsv_delta ) + 4 );
-		}
-		else
-		{
-			hsv_h = 0;
-		}
+		/* Calculate V value of HSV */
+		hsv_v = hsv_cmax;
 
 		/* Calculate S value of HSV */
 		if( 0 != hsv_cmax )
 		{
-			hsv_s = hsv_delta / hsv_cmax;
+			hsv_s = 255 * (hsv_cmax - hsv_cmin) / hsv_cmax;
 		}
 		else
 		{
 			hsv_s = 0;
 		}
 
-		/* Calculate V value of HSV */
-		hsv_v = hsv_cmax;
+		/* Calculate H value of HSV */
+		if( 0 == hsv_delta )
+		{
+			hsv_h = 0;
+		}
+		else if( hsv_cmax == val_r )
+		{
+			hsv_h =   0 + 43 * (val_g - val_b) / hsv_delta;
+		}
+		else if( hsv_cmax == val_g )
+		{
+			hsv_h =  85 + 43 * (val_b - val_r) / hsv_delta;
+		}
+		else if( hsv_cmax == val_b )
+		{
+			hsv_h = 171 + 43 * (val_r - val_g) / hsv_delta;
+		}
+		else
+		{
+			hsv_h = 0;
+		}
 
 		/* Check if pixel color is within desired range */
 		if ( hsv_h >= ProxSensor_Config.BwTh_low_HSV_H

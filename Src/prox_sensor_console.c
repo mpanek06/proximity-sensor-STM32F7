@@ -258,13 +258,13 @@ void ProxSensor_Console_CurrParams( char* arg )
                                                                      ProxSensor_Config.BwTh_B,
 																	 lineSeparator );
 
-	sprintf(commandResponseBuff, "%s BWThHSV H: %.2f  S: %.2f  V: %.2f %s", commandResponseBuff,
+	sprintf(commandResponseBuff, "%s HSV min H: %d    S: %d    V: %d %s", commandResponseBuff,
                                                                      ProxSensor_Config.BwTh_low_HSV_H,
                                                                      ProxSensor_Config.BwTh_low_HSV_S,
                                                                      ProxSensor_Config.BwTh_low_HSV_V,
 																	 lineSeparator );
 
-	sprintf(commandResponseBuff, "%s BWThHSV H: %.2f  S: %.2f  V: %.2f %s", commandResponseBuff,
+	sprintf(commandResponseBuff, "%s HSV max H: %d    S: %d    V: %d %s", commandResponseBuff,
                                                                      ProxSensor_Config.BwTh_up_HSV_H,
                                                                      ProxSensor_Config.BwTh_up_HSV_S,
                                                                      ProxSensor_Config.BwTh_up_HSV_V,
