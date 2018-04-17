@@ -84,17 +84,7 @@ void ProxSensor_Console_SetBwTh_low_HSV_H( char* arg ){	ProxSensor_Config.BwTh_l
 void ProxSensor_Console_SetBwTh_low_HSV_S( char* arg ){	ProxSensor_Config.BwTh_low_HSV_S = atof(arg);}
 void ProxSensor_Console_SetBwTh_low_HSV_V( char* arg ){ ProxSensor_Config.BwTh_low_HSV_V = atof(arg);}
 
-void ProxSensor_Console_SetBwTh_R( char* arg ){	ProxSensor_Config.BwTh_R = atoi(arg);}
-void ProxSensor_Console_SetBwTh_G( char* arg ){	ProxSensor_Config.BwTh_G = atoi(arg);}
-void ProxSensor_Console_SetBwTh_B( char* arg ){	ProxSensor_Config.BwTh_B = atoi(arg);}
-
-void ProxSensor_Console_SetGrCoeff_R( char* arg ){ ProxSensor_Config.Grayscale_coeff_R = atof(arg);}
-void ProxSensor_Console_SetGrCoeff_G( char* arg ){ ProxSensor_Config.Grayscale_coeff_G = atof(arg);}
-void ProxSensor_Console_SetGrCoeff_B( char* arg ){ ProxSensor_Config.Grayscale_coeff_B = atof(arg);}
-
-void ProxSensor_Console_SetNoOfPixels_R( char* arg ){ ProxSensor_Config.minNumberOfPixels_R = atoi(arg);}
-void ProxSensor_Console_SetNoOfPixels_G( char* arg ){ ProxSensor_Config.minNumberOfPixels_G = atoi(arg);}
-void ProxSensor_Console_SetNoOfPixels_B( char* arg ){ ProxSensor_Config.minNumberOfPixels_B = atoi(arg);}
+void ProxSensor_Console_SetNoOfPixels( char* arg ){ ProxSensor_Config.minNumberOfPixels = atoi(arg);}
 
 void ProxSensor_Console_ToggleAlgo( char* arg ){ ProxSensor_Config.algoActive ^= 1;}
 void ProxSensor_Console_ToggleHalfScreen( char* arg ){ ProxSensor_Config.halfScreenMode ^= 1;}
@@ -106,15 +96,7 @@ extern uint16_t (*ImgPtr)[CAM_IMG_WIDTH];
 
 ProxSensor_CommandEntry_T ProxSensor_consoleOptions[ PROX_SENSOR_NO_OF_OPTIONS ] =
 {
-		{ '1', "BwTh_R",     	                          ProxSensor_Console_SetBwTh_R },
-//		{ '2', "BwTh_G",     	                          ProxSensor_Console_SetBwTh_G },
-//		{ '3', "BwTh_B",     	                          ProxSensor_Console_SetBwTh_B },
-//		{ '4', "Grayscale_coeff_R",        	           ProxSensor_Console_SetGrCoeff_R },
-//		{ '5', "Grayscale_coeff_G",        	           ProxSensor_Console_SetGrCoeff_G },
-//		{ '6', "Grayscale_coeff_B",        	           ProxSensor_Console_SetGrCoeff_B },
-		{ '7', "NoOfPixels_R",     	                ProxSensor_Console_SetNoOfPixels_R },
-		{ '8', "NoOfPixels_G",     	                ProxSensor_Console_SetNoOfPixels_G },
-		{ '9', "NoOfPixels_B",     	                ProxSensor_Console_SetNoOfPixels_B },
+		{ '7', "NoOfPixels_R",     	                  ProxSensor_Console_SetNoOfPixels },
 		{ 'a', "Toggle algorithm",                       ProxSensor_Console_ToggleAlgo },
 		{ 'b', "Toggle half screen mode",          ProxSensor_Console_ToggleHalfScreen },
 		{ 'c', "Set detected color",               ProxSensor_Console_SetDetectedColor },
@@ -246,17 +228,7 @@ void ProxSensor_Console_CurrParams( char* arg )
 
 	sprintf(commandResponseBuff, "Current parameters of algorithm: %s", lineSeparator );
 
-	sprintf(commandResponseBuff, "%s Pixels  R: %d    G: %d    B: %d %s", commandResponseBuff,
-                                                                       ProxSensor_Config.minNumberOfPixels_R,
-																       ProxSensor_Config.minNumberOfPixels_G,
-																       ProxSensor_Config.minNumberOfPixels_B,
-																       lineSeparator );
-
-	sprintf(commandResponseBuff, "%s BWTh    R: %d    G: %d    B: %d %s", commandResponseBuff,
-                                                                     ProxSensor_Config.BwTh_R,
-                                                                     ProxSensor_Config.BwTh_G,
-                                                                     ProxSensor_Config.BwTh_B,
-																	 lineSeparator );
+	sprintf(commandResponseBuff, "%s Pixels: %d ", commandResponseBuff, ProxSensor_Config.minNumberOfPixels, lineSeparator );
 
 	sprintf(commandResponseBuff, "%s HSV min H: %d    S: %d    V: %d %s", commandResponseBuff,
                                                                      ProxSensor_Config.BwTh_low_HSV_H,
@@ -269,12 +241,6 @@ void ProxSensor_Console_CurrParams( char* arg )
                                                                      ProxSensor_Config.BwTh_up_HSV_S,
                                                                      ProxSensor_Config.BwTh_up_HSV_V,
 																	 lineSeparator );
-
-	sprintf(commandResponseBuff, "%s GrCoef  R: %.2f  G: %.2f  B: %.2f  %s", commandResponseBuff,
-                                                                                 ProxSensor_Config.Grayscale_coeff_R,
-																				 ProxSensor_Config.Grayscale_coeff_G,
-																				 ProxSensor_Config.Grayscale_coeff_B,
-																				 lineSeparator );
 
 	strcat(commandResponseBuff, lineSeparator);
 

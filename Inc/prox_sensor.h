@@ -67,15 +67,8 @@ typedef struct
 	uint8_t halfScreenMode;
 
 	/* Number of continuously occurring pixels
-	 * to be detected as object for R, G and B color. */
-	uint16_t minNumberOfPixels_R;
-	uint16_t minNumberOfPixels_G;
-	uint16_t minNumberOfPixels_B;
-
-	/* Threshold for image binarization. */
-	uint8_t BwTh_R;
-	uint8_t BwTh_G;
-	uint8_t BwTh_B;
+	 * to be detected as object. */
+	uint16_t minNumberOfPixels;
 
 	/* Threshold for image binarization in HSV cases. */
 	uint8_t BwTh_low_HSV_H;
@@ -85,11 +78,6 @@ typedef struct
 	uint8_t BwTh_up_HSV_S;
 	uint8_t BwTh_up_HSV_H;
 	uint8_t BwTh_up_HSV_V;
-
-	/* Threshold for image binarization. */
-	float Grayscale_coeff_R;
-	float Grayscale_coeff_G;
-	float Grayscale_coeff_B;
 }ProxSensor_Config_T;
 
 typedef struct
