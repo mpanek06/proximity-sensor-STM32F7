@@ -69,19 +69,28 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 {
 	ProxSensor_HSV_Color_T hsvColor;
 
-	uint16_t currentHighestLabel = 0U;
-	uint16_t label               = 0U;
-	uint32_t i                   = 0U;
-	uint16_t x                   = 0U;
-	uint16_t y                   = 0U;
+	uint16_t currentHighestLabel = 0;
+	uint16_t label               = 0;
+	uint32_t i                   = 0;
+	uint16_t x                   = 0;
+	uint16_t y                   = 0;
 
 	uint16_t *ptr                = (uint16_t*) frameBufferAddr;
-	uint16_t pixel               = 0U;
+	uint16_t pixel               = 0;
 	uint8_t  val_r               = 0;
 	uint8_t  val_g               = 0;
 	uint8_t  val_b               = 0;
 
-	char     layerIdStr[4]       = {0};
+	uint32_t area                = 0;
+	uint32_t maxArea             = 0;
+	uint32_t maxAreaLabel        = 0;
+
+	uint16_t x_min               = 0;
+	uint16_t x_max               = 0;
+	uint16_t y_min               = 0;
+	uint16_t y_max               = 0;
+
+	char     osdStr[20]          = {0};
 
 	memset(labelsArray, 0, sizeof(labelsArray));
 	memset(labelsInfoArray, 0, sizeof(labelsInfoArray));
@@ -106,7 +115,7 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 		/* Check if pixel color is within desired range */
 		if (isPixelInRange(&hsvColor))
 		{
-			*ptr = COLOR_RED;
+			*ptr = COLOR_WHITE;
 		}
 		else
 		{
@@ -232,24 +241,42 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 		}
 	} /* END OF REMOVE SMALL OBJECTS */
 
-	/* Put on screen information. */
+	/* Find biggest object detected on the image. */
 	for(uint16_t i = 1; i <= currentHighestLabel; ++i )
 	{
 		if(isLabelValid(i))
 		{
-			uint16_t x_min = labelsInfoArray[i].x_min;
-			uint16_t x_max = labelsInfoArray[i].x_max;
-			uint16_t y_min = labelsInfoArray[i].y_min;
-			uint16_t y_max = labelsInfoArray[i].y_max;
+			x_min = labelsInfoArray[i].x_min;
+			x_max = labelsInfoArray[i].x_max;
+			y_min = labelsInfoArray[i].y_min;
+			y_max = labelsInfoArray[i].y_max;
 
-			/* Draw a bounding box around each of detected objects. */
-			LCD_drawRectangle(x_min, y_min, x_max, y_max, 0);
+			area = (x_max-x_min) * (y_max-y_min);
 
-			/* Put text info in bounding box. */
-			memset(layerIdStr, 0, 4);
-			itoa(i, layerIdStr, 10);
-			LCD_putString( x_min, y_min + 10, (uint8_t *) layerIdStr, 0 );
+			if( area > maxArea )
+			{
+				maxArea = area;
+				maxAreaLabel = i;
+			}
 		}
+	}
+
+	/* If maxArea is not equal to zero, we have detected some object
+	 * and we should put OSD information on screen. */
+	if( 0 != maxArea )
+	{
+		x_min = labelsInfoArray[maxAreaLabel].x_min;
+		x_max = labelsInfoArray[maxAreaLabel].x_max;
+		y_min = labelsInfoArray[maxAreaLabel].y_min;
+		y_max = labelsInfoArray[maxAreaLabel].y_max;
+
+		/* Draw a bounding box around each of detected objects. */
+		LCD_drawRectangle(x_min, y_min, x_max, y_max, 0);
+
+		/* Put text info in bounding box. */
+		memset(osdStr, 0, strlen(osdStr));
+		sprintf(osdStr, "Area: %ld", maxArea);
+		LCD_putString( x_min, y_min + 10, (uint8_t *) osdStr, 0 );
 	}
 }
 
