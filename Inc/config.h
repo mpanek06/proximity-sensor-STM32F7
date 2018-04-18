@@ -37,4 +37,11 @@
 #define MAX_U16_VAL    ((uint16_t) 0xffff)
 #define MAX_U32_VAL    ((uint32_t) 0xffffffff)
 
+#define OBJ_SIZE_AT_0_DIST     34400
+#define PIXEL_CHANGE_PER_PIXEL 920
+#define PROX_PIXEL_TH          200
+
+#define GETTING_CLOSER_MARK    "<-"
+#define GETTING_FURTHER_MARK   "->"
+
 #endif /* CONFIG_H_ */

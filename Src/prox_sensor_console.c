@@ -228,7 +228,7 @@ void ProxSensor_Console_CurrParams( char* arg )
 
 	sprintf(commandResponseBuff, "Current parameters of algorithm: %s", lineSeparator );
 
-	sprintf(commandResponseBuff, "%s Pixels: %d ", commandResponseBuff, ProxSensor_Config.minNumberOfPixels, lineSeparator );
+	sprintf(commandResponseBuff, "%s Pixels: %d %s", commandResponseBuff, ProxSensor_Config.minNumberOfPixels, lineSeparator );
 
 	sprintf(commandResponseBuff, "%s HSV min H: %d    S: %d    V: %d %s", commandResponseBuff,
                                                                      ProxSensor_Config.BwTh_low_HSV_H,

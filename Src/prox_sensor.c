@@ -18,6 +18,7 @@ static void             performOperationsOnFrame_HSV(uint32_t frameBufferAddr);
 
 static inline uint8_t   isLabelValid(uint16_t labelNumber);
 static inline uint8_t   isPixelInRange( ProxSensor_HSV_Color_T *hsvColor );
+static inline uint32_t  calculateDistance( uint32_t *area );
 static inline void      convertRGB2HSV(uint8_t *val_r, uint8_t *val_g, uint8_t *val_b, ProxSensor_HSV_Color_T *hsvColor);
 
 void ProxSensor_Init(uint32_t frameBufferAddr)
@@ -85,6 +86,9 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 	uint32_t area                = 0;
 	uint32_t maxArea             = 0;
 	uint32_t maxAreaLabel        = 0;
+
+	uint32_t distanceToObj       = 0;
+	static uint32_t prevDistanceToObj   = 0;
 
 	uint16_t x_min               = 0;
 	uint16_t x_max               = 0;
@@ -262,7 +266,6 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 		}
 	}
 
-	float distanceToObj = 0;
 	/* If maxArea is not equal to zero, we have detected some object
 	 * and we should put OSD information on screen. */
 	if( 0 != maxArea )
@@ -272,7 +275,9 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 		y_min = labelsInfoArray[maxAreaLabel].y_min;
 		y_max = labelsInfoArray[maxAreaLabel].y_max;
 
-		distanceToObj = ( 34400 - maxArea ) / 920;
+		/* Store previous distance and calculate current one.*/
+		prevDistanceToObj = distanceToObj;
+		distanceToObj = calculateDistance(&maxArea);
 
 		/* Draw a bounding box around each of detected objects. */
 		LCD_drawRectangle(x_min, y_min, x_max, y_max, 0);
@@ -284,9 +289,29 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 
 		/* Put text info in bounding box. */
 		memset(osdStr, 0, strlen(osdStr));
-		sprintf(osdStr, "Disct: %f cm", distanceToObj);
-		LCD_putString( x_min+10, y_max + 10, (uint8_t *) osdStr, 0 );
+		sprintf(osdStr, "Dist: %ldmm ", distanceToObj);
+
+		int32_t distanceDiff = distanceToObj - prevDistanceToObj;
+
+		if( distanceDiff > PROX_PIXEL_TH )
+		{
+			if(distanceDiff > 0)
+			{
+				strcat(osdStr, GETTING_CLOSER_MARK);
+			}
+			else
+			{
+				strcat(osdStr, GETTING_FURTHER_MARK);
+			}
+		}
+
+		LCD_putString( x_min + 10, y_max + 10, (uint8_t *) osdStr, 0 );
 	}
+}
+
+static inline uint32_t calculateDistance( uint32_t *area )
+{
+	return 10 * (OBJ_SIZE_AT_0_DIST - *area ) / 10*PIXEL_CHANGE_PER_PIXEL;
 }
 
 static inline uint8_t isPixelInRange( ProxSensor_HSV_Color_T *hsvColor )
