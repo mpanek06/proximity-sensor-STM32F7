@@ -19,7 +19,7 @@ static void             performOperationsOnFrame_HSV(uint32_t frameBufferAddr);
 static inline uint8_t   isLabelValid(uint16_t labelNumber);
 static inline uint8_t   isPixelInRange( ProxSensor_HSV_Color_T *hsvColor );
 static inline uint32_t  calculateDistance( uint32_t *area );
-static inline void      convertRGB2HSV(uint8_t *val_r, uint8_t *val_g, uint8_t *val_b, ProxSensor_HSV_Color_T *hsvColor);
+static inline void      convertRGB2HSV(ProxSensor_RGB_Color_T *rgbColor, ProxSensor_HSV_Color_T *hsvColor);
 
 void ProxSensor_Init(uint32_t frameBufferAddr)
 {
@@ -69,7 +69,10 @@ uint8_t ProxSensor_Perform(uint32_t frameBufferAddr)
 
 void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 {
-	ProxSensor_HSV_Color_T hsvColor;
+	ProxSensor_HSV_Color_T   hsvColor;
+	ProxSensor_RGB_Color_T   rgbColor;
+	ProxSensor_BoundingBox_T bBox    = {0,0,0,0};
+	ProxSensor_BoundingBox_T bBoxMax = {0,0,0,0};
 
 	uint16_t currentHighestLabel = 0;
 	uint16_t label               = 0;
@@ -79,9 +82,6 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 
 	uint16_t *ptr                = (uint16_t*) frameBufferAddr;
 	uint16_t pixel               = 0;
-	uint8_t  val_r               = 0;
-	uint8_t  val_g               = 0;
-	uint8_t  val_b               = 0;
 
 	uint32_t area                = 0;
 	uint32_t maxArea             = 0;
@@ -89,11 +89,6 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 
 	uint32_t distanceToObj       = 0;
 	static uint32_t prevDistanceToObj   = 0;
-
-	uint16_t x_min               = 0;
-	uint16_t x_max               = 0;
-	uint16_t y_min               = 0;
-	uint16_t y_max               = 0;
 
 	char     osdStr[20]          = {0};
 
@@ -111,11 +106,11 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 		pixel = *ptr;
 
 		/* Get values of RGB colors for current pixel */
-		val_r = RGB565_GET_R(pixel);
-		val_g = RGB565_GET_G(pixel);
-		val_b = RGB565_GET_B(pixel);
+		rgbColor.r = RGB565_GET_R(pixel);
+		rgbColor.g = RGB565_GET_G(pixel);
+		rgbColor.b = RGB565_GET_B(pixel);
 
-		convertRGB2HSV(&val_r, &val_g, &val_b, &hsvColor);
+		convertRGB2HSV(&rgbColor, &hsvColor);
 
 		/* Check if pixel color is within desired range */
 		if (isPixelInRange(&hsvColor))
@@ -251,15 +246,16 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 	{
 		if(isLabelValid(i))
 		{
-			x_min = labelsInfoArray[i].x_min;
-			x_max = labelsInfoArray[i].x_max;
-			y_min = labelsInfoArray[i].y_min;
-			y_max = labelsInfoArray[i].y_max;
+			bBox.x_min = labelsInfoArray[i].x_min;
+			bBox.x_max = labelsInfoArray[i].x_max;
+			bBox.y_min = labelsInfoArray[i].y_min;
+			bBox.y_max = labelsInfoArray[i].y_max;
 
-			area = (x_max-x_min) * (y_max-y_min);
+			area = (bBox.x_max - bBox.x_min) * (bBox.y_max - bBox.y_min);
 
 			if( area > maxArea )
 			{
+				bBoxMax = bBox;
 				maxArea = area;
 				maxAreaLabel = i;
 			}
@@ -270,22 +266,22 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 	 * and we should put OSD information on screen. */
 	if( 0 != maxArea )
 	{
-		x_min = labelsInfoArray[maxAreaLabel].x_min;
-		x_max = labelsInfoArray[maxAreaLabel].x_max;
-		y_min = labelsInfoArray[maxAreaLabel].y_min;
-		y_max = labelsInfoArray[maxAreaLabel].y_max;
+		bBoxMax.x_min = labelsInfoArray[maxAreaLabel].x_min;
+		bBoxMax.x_max = labelsInfoArray[maxAreaLabel].x_max;
+		bBoxMax.y_min = labelsInfoArray[maxAreaLabel].y_min;
+		bBoxMax.y_max = labelsInfoArray[maxAreaLabel].y_max;
 
 		/* Store previous distance and calculate current one.*/
 		prevDistanceToObj = distanceToObj;
 		distanceToObj = calculateDistance(&maxArea);
 
 		/* Draw a bounding box around each of detected objects. */
-		LCD_drawRectangle(x_min, y_min, x_max, y_max, 0);
+		LCD_drawRectangle(bBoxMax.x_min, bBoxMax.y_min, bBoxMax.x_max, bBoxMax.y_max, 0);
 
 		/* Put text info in bounding box. */
 		memset(osdStr, 0, strlen(osdStr));
 		sprintf(osdStr, "Area: %ld", maxArea);
-		LCD_putString( x_min, y_min + 10, (uint8_t *) osdStr, 0 );
+		LCD_putString( bBoxMax.x_min, bBoxMax.y_min + 10, (uint8_t *) osdStr, 0 );
 
 		/* Put text info in bounding box. */
 		memset(osdStr, 0, strlen(osdStr));
@@ -305,7 +301,7 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 			}
 		}
 
-		LCD_putString( x_min + 10, y_max + 10, (uint8_t *) osdStr, 0 );
+		LCD_putString( bBoxMax.x_min + 10, bBoxMax.y_max + 10, (uint8_t *) osdStr, 0 );
 	}
 }
 
@@ -330,7 +326,7 @@ static inline uint8_t isLabelValid(uint16_t labelNumber)
 	return labelsInfoArray[labelNumber].numberOfPixels >= ProxSensor_Config.minNumberOfPixels;
 }
 
-static inline void convertRGB2HSV(uint8_t *val_r, uint8_t *val_g, uint8_t *val_b, ProxSensor_HSV_Color_T *hsvColor)
+static inline void convertRGB2HSV(ProxSensor_RGB_Color_T *rgbColor, ProxSensor_HSV_Color_T *hsvColor)
 {
 	uint8_t  hsv_cmin  = 0;
 	uint8_t  hsv_cmax  = 0;
@@ -338,8 +334,8 @@ static inline void convertRGB2HSV(uint8_t *val_r, uint8_t *val_g, uint8_t *val_b
 
 	/* Convert current pixel into HSV */
 
-	hsv_cmax  = MAX(*val_r, MAX(*val_g, *val_b));
-	hsv_cmin  = MIN(*val_r, MIN(*val_g, *val_b));
+	hsv_cmax  = MAX(rgbColor->r, MAX(rgbColor->g, rgbColor->b));
+	hsv_cmin  = MIN(rgbColor->r, MIN(rgbColor->g, rgbColor->b));
 	hsv_delta = hsv_cmax - hsv_cmin;
 
 	/* Calculate V value of HSV */
@@ -366,17 +362,17 @@ static inline void convertRGB2HSV(uint8_t *val_r, uint8_t *val_g, uint8_t *val_b
 	{
 		hsvColor->h = 0;
 	}
-	else if( hsv_cmax == *val_r )
+	else if( hsv_cmax == rgbColor->r )
 	{
-		hsvColor->h =   0 + 43 * (*val_g - *val_b) / hsv_delta;
+		hsvColor->h =   0 + 43 * (rgbColor->g - rgbColor->b) / hsv_delta;
 	}
-	else if( hsv_cmax == *val_g )
+	else if( hsv_cmax == rgbColor->g )
 	{
-		hsvColor->h =  85 + 43 * (*val_b - *val_r) / hsv_delta;
+		hsvColor->h =  85 + 43 * (rgbColor->b - rgbColor->r) / hsv_delta;
 	}
-	else if( hsv_cmax == *val_b )
+	else if( hsv_cmax == rgbColor->b )
 	{
-		hsvColor->h = 171 + 43 * (*val_r - *val_g) / hsv_delta;
+		hsvColor->h = 171 + 43 * (rgbColor->r - rgbColor->g) / hsv_delta;
 	}
 	else
 	{

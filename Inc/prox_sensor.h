@@ -96,6 +96,17 @@ typedef struct
 
 typedef struct
 {
+	/* Red component of RGB representation. */
+	uint16_t r;
+	/* Green component of RGB representation. */
+	uint16_t g;
+	/* Blue component of RGB representation. */
+	uint16_t b;
+
+}ProxSensor_RGB_Color_T;
+
+typedef struct
+{
 	/* Hue component of HSV representation. */
 	uint16_t h;
 	/* Saturation component of HSV representation. */
@@ -104,6 +115,15 @@ typedef struct
 	uint16_t v;
 
 }ProxSensor_HSV_Color_T;
+
+typedef struct
+{
+	uint16_t x_min;
+	uint16_t x_max;
+	uint16_t y_min;
+	uint16_t y_max;
+
+}ProxSensor_BoundingBox_T;
 
 typedef struct
 {
