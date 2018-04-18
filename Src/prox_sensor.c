@@ -23,20 +23,21 @@ static inline void      convertRGB2HSV(uint8_t *val_r, uint8_t *val_g, uint8_t *
 void ProxSensor_Init(uint32_t frameBufferAddr)
 {
 	ProxSensor_Config.algoActive     = 1;
-	ProxSensor_Config.labelingActive = 1;
+	ProxSensor_Config.labelingActive = 0;
 	ProxSensor_Config.removingSmallObjectsActive = 1;
 	ProxSensor_Config.halfScreenMode = 0;
 	ProxSensor_Config.detectedColor  = ProxSensor_Color_R;
 
 	ProxSensor_Config.minNumberOfPixels = 25;
 
-	ProxSensor_Config.BwTh_low_HSV_H = 127;
-	ProxSensor_Config.BwTh_low_HSV_S =  23;
-	ProxSensor_Config.BwTh_low_HSV_V =  30;
+	ProxSensor_Config.BwTh_low_HSV_H = 121;
+	ProxSensor_Config.BwTh_up_HSV_H  = 179;
 
-	ProxSensor_Config.BwTh_up_HSV_H = 179;
-	ProxSensor_Config.BwTh_up_HSV_S = 255;
-	ProxSensor_Config.BwTh_up_HSV_V = 255;
+	ProxSensor_Config.BwTh_low_HSV_S = 158;
+	ProxSensor_Config.BwTh_up_HSV_S  = 255;
+
+	ProxSensor_Config.BwTh_low_HSV_V =  41;
+	ProxSensor_Config.BwTh_up_HSV_V  = 255;
 
 	processingWidth = CAM_IMG_WIDTH;
 }
@@ -261,6 +262,7 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 		}
 	}
 
+	float distanceToObj = 0;
 	/* If maxArea is not equal to zero, we have detected some object
 	 * and we should put OSD information on screen. */
 	if( 0 != maxArea )
@@ -270,6 +272,8 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 		y_min = labelsInfoArray[maxAreaLabel].y_min;
 		y_max = labelsInfoArray[maxAreaLabel].y_max;
 
+		distanceToObj = ( 34400 - maxArea ) / 920;
+
 		/* Draw a bounding box around each of detected objects. */
 		LCD_drawRectangle(x_min, y_min, x_max, y_max, 0);
 
@@ -277,6 +281,11 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 		memset(osdStr, 0, strlen(osdStr));
 		sprintf(osdStr, "Area: %ld", maxArea);
 		LCD_putString( x_min, y_min + 10, (uint8_t *) osdStr, 0 );
+
+		/* Put text info in bounding box. */
+		memset(osdStr, 0, strlen(osdStr));
+		sprintf(osdStr, "Disct: %f cm", distanceToObj);
+		LCD_putString( x_min+10, y_max + 10, (uint8_t *) osdStr, 0 );
 	}
 }
 
