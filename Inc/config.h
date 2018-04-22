@@ -37,9 +37,14 @@
 #define MAX_U16_VAL    ((uint16_t) 0xffff)
 #define MAX_U32_VAL    ((uint32_t) 0xffffffff)
 
-#define OBJ_SIZE_AT_0_DIST     34400
-#define PIXEL_CHANGE_PER_PIXEL 920
-#define PROX_PIXEL_TH          200
+#define OBJ_SIZE_AT_20_DIST     4700
+#define OBJ_SIZE_AT_30_DIST     2000
+
+#define DIST_CALC_D            200
+#define DIST_CALC_P            660
+#define DIST_CALC_W            40
+#define DIST_CALC_F            ( ( DIST_CALC_P * DIST_CALC_D ) / DIST_CALC_W )
+#define PROX_PIXEL_TH          1
 
 #define GETTING_CLOSER_MARK    "<-"
 #define GETTING_FURTHER_MARK   "->"

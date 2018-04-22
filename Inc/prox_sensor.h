@@ -31,7 +31,7 @@
 #define COLOR_BLUE  0x001F
 
 #define  NO_LABEL          0
-#define  MAX_NUM_OF_LABELS 1000
+#define  MAX_NUM_OF_LABELS 10000
 
 typedef enum
 {
