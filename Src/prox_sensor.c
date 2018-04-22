@@ -289,7 +289,7 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 
 		int32_t distanceDiff = distanceToObj - prevDistanceToObj;
 
-		if( distanceDiff > PROX_PIXEL_TH )
+		if( distanceDiff > PROX_PIXEL_TH*10 )
 		{
 			if(distanceDiff > 0)
 			{
