@@ -11,9 +11,9 @@ ProxSensor_CurrentState_T ProxSensor_CurrentState;
 
 uint16_t                (*ImgPtr)[CAM_IMG_WIDTH];
 #if defined CAM_R_VGA
-uint8_t                labelsArray[CAM_IMG_HEIGHT][CAM_IMG_WIDTH] = {0};
+uint8_t                 labelsArray[CAM_IMG_HEIGHT][CAM_IMG_WIDTH] = {0};
 #else
-uint16_t               labelsArray[CAM_IMG_HEIGHT][CAM_IMG_WIDTH] = {0};
+uint16_t                labelsArray[CAM_IMG_HEIGHT][CAM_IMG_WIDTH] = {0};
 #endif
 ProxSensor_LabelInfo_T  labelsInfoArray[MAX_NUM_OF_LABELS] = {0};
 uint16_t                processingWidth = CAM_IMG_WIDTH;
@@ -91,7 +91,6 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 	uint32_t maxArea             = 0;
 	uint32_t maxAreaLabel        = 0;
 
-	static uint32_t distanceToObj       = 0;
 	static uint32_t prevDistanceToObj   = 0;
 
 	char     osdStr[20]          = {0};
@@ -278,8 +277,9 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 		maxArea = bBoxMax.y_max - bBoxMax.y_min;
 
 		/* Store previous distance and calculate current one.*/
-		prevDistanceToObj = distanceToObj;
-		distanceToObj = calculateDistance(&maxArea);
+		prevDistanceToObj = ProxSensor_CurrentState.currDistanceToObj;
+		ProxSensor_CurrentState.currDistanceToObj = calculateDistance(&maxArea);
+		ProxSensor_CurrentState.currObjWidthPixel = maxArea;
 
 		/* Draw a bounding box around each of detected objects. */
 		LCD_drawRectangle(bBoxMax.x_min, bBoxMax.y_min, bBoxMax.x_max, bBoxMax.y_max, 0);
@@ -291,9 +291,9 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 
 		/* Put text info in bounding box. */
 		memset(osdStr, 0, strlen(osdStr));
-		sprintf(osdStr, "Dist: %ldmm ", distanceToObj);
+		sprintf(osdStr, "Dist: %ldmm ", ProxSensor_CurrentState.currDistanceToObj);
 
-		int32_t distanceDiff = (int32_t) (distanceToObj - prevDistanceToObj);
+		int32_t distanceDiff = (int32_t) (ProxSensor_CurrentState.currDistanceToObj - prevDistanceToObj);
 
 		if( distanceDiff > PROX_PIXEL_TH || distanceDiff < ( PROX_PIXEL_TH * (-1) ) )
 		{

@@ -70,6 +70,7 @@ void ProxSensor_Console_SetBrightness( char* arg );
 void ProxSensor_Console_SetContrast( char* arg );
 
 void ProxSensor_Console_CurrParams( char* arg );
+void ProxSensor_Console_GetCurrentDistance( char* arg );
 void ProxSensor_Console_PrintDebugDataOnUSB( char* arg );
 void ProxSensor_Console_ShowHelp( char* arg );
 void ProxSensor_Console_ToggleLiveMode( char* arg );
@@ -107,6 +108,7 @@ ProxSensor_CommandEntry_T ProxSensor_consoleOptions[ PROX_SENSOR_NO_OF_OPTIONS ]
 		{ 'i', "Set brightness",                      ProxSensor_Console_SetBrightness },
 		{ 'j', "Set contrast",                          ProxSensor_Console_SetContrast },
 		{ 'l', "Toggle live mode",                   ProxSensor_Console_ToggleLiveMode },
+		{ 'm', "Get current distance",           ProxSensor_Console_GetCurrentDistance },
 		{ 'r', "Restart STM32 uC",                        ProxSensor_Console_RestartuC },
 		{ 's', "Toggle labeling",                    ProxSensor_Console_ToggleLabeling },
 		{ 'u', "Send one image frame via USB",           ProxSensor_Console_SendImgUSB },
@@ -256,6 +258,13 @@ void ProxSensor_Console_CurrParams( char* arg )
 	strcat(commandResponseBuff, lineSeparator);
 
 	sendStringToDiagTerminal( commandResponseBuff, strlen(commandResponseBuff) );
+}
+
+void ProxSensor_Console_GetCurrentDistance( char* arg )
+{
+	memset(commandResponseBuff, 0, RESPONSE_BUFF_SIZE);
+	sprintf(commandResponseBuff, "%ld;%ld\n", ProxSensor_CurrentState.currDistanceToObj, ProxSensor_CurrentState.currObjWidthPixel);
+	sendStringOnUSBPort(commandResponseBuff, strlen(commandResponseBuff));
 }
 
 void ProxSensor_Console_PrintDebugDataOnUSB( char* arg )

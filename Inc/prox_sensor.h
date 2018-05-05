@@ -127,7 +127,8 @@ typedef struct
 
 typedef struct
 {
-
+	uint32_t currDistanceToObj;
+	uint32_t currObjWidthPixel;
 
 }ProxSensor_CurrentState_T;
 
