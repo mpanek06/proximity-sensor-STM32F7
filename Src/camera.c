@@ -43,6 +43,7 @@ uint8_t CAMERA_Init(uint32_t Resolution) /*Camera initialization*/
 		{
 			camera_driv->Init(CameraHwAddress, Resolution);
 			HAL_DCMI_ConfigCROP(&hdcmi, 0, 0, 480, 272);
+			HAL_DCMI_EnableCrop(&hdcmi);
 		}
 		status = CAMERA_OK; /* Return CAMERA_OK status */
 

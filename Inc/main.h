@@ -384,7 +384,8 @@
 
 /* USER CODE BEGIN Private defines */
 #define FRAME_BUFFER   0xC0000000
-#define FRAME_BUFFER_2 0xC0025800
+//#define FRAME_BUFFER_2 0xC0025800
+#define FRAME_BUFFER_2 0xC003FC00
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

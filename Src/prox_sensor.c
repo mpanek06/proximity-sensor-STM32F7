@@ -10,7 +10,11 @@ ProxSensor_Config_T       ProxSensor_Config;
 ProxSensor_CurrentState_T ProxSensor_CurrentState;
 
 uint16_t                (*ImgPtr)[CAM_IMG_WIDTH];
-uint16_t                labelsArray[CAM_IMG_HEIGHT][CAM_IMG_WIDTH] = {0};
+#if defined CAM_R_VGA
+uint8_t                labelsArray[CAM_IMG_HEIGHT][CAM_IMG_WIDTH] = {0};
+#else
+uint16_t               labelsArray[CAM_IMG_HEIGHT][CAM_IMG_WIDTH] = {0};
+#endif
 ProxSensor_LabelInfo_T  labelsInfoArray[MAX_NUM_OF_LABELS] = {0};
 uint16_t                processingWidth = CAM_IMG_WIDTH;
 

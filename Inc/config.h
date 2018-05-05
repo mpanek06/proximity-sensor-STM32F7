@@ -8,17 +8,20 @@
 #ifndef CONFIG_H_
 #define CONFIG_H_
 
+//#define CAM_R_VGA
 #define CAM_R_QVGA
 //#define CAM_R_QQVGA
 
-#ifdef CAM_R_QVGA
-	#define CAM_IMG_WIDTH  ((uint16_t)320)
-	#define CAM_IMG_HEIGHT ((uint16_t)240)
-#elif defined CAM_R_QQVGA
+#ifdef CAM_R_QQVGA
 	#define CAM_IMG_WIDTH  ((uint16_t)160)
 	#define CAM_IMG_HEIGHT ((uint16_t)120)
+#elif defined CAM_R_QVGA
+	#define CAM_IMG_WIDTH  ((uint16_t)320)
+	#define CAM_IMG_HEIGHT ((uint16_t)240)
+#elif defined CAM_R_VGA
+	#define CAM_IMG_WIDTH  ((uint16_t)480)
+	#define CAM_IMG_HEIGHT ((uint16_t)272)
 #endif
-
 
 #define CAM_IMG_SIZE   (CAM_IMG_WIDTH * CAM_IMG_HEIGHT)
 /* Image size in byte, each pixel in RGB565 takes 2 bytes*/

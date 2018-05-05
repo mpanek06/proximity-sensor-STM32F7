@@ -175,25 +175,27 @@ int main(void)
   ProxSensor_Init(FRAME_BUFFER);
   ProxSensor_Console_Init();
 
-  LTDC_Init(FRAME_BUFFER, 80, 0, CAM_IMG_WIDTH, CAM_IMG_HEIGHT);
+  LTDC_Init(FRAME_BUFFER, 0, 0, CAM_IMG_WIDTH, CAM_IMG_HEIGHT);
   BSP_SDRAM_Init();
 
-#ifdef CAM_R_QVGA
-  CAMERA_Init(CAMERA_R320x240);
-#elif defined CAM_R_QQVGA
+#ifdef CAM_R_QQVGA
   CAMERA_Init(CAMERA_R160x120);
+#elif defined CAM_R_QVGA
+  CAMERA_Init(CAMERA_R320x240);
+#elif defined CAM_R_VGA
+  CAMERA_Init(CAMERA_R640x480);
 #endif
 
   //Delay for the camera to output correct data
   HAL_Delay(1000);
-  Im_size = CAM_IMG_WIDTH * CAM_IMG_HEIGHT * 2 / 4;
-
+  Im_size = CAM_IMG_SIZE * 2 / 4;
   MPU_Config();
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
 
   while (1)
   {
@@ -427,6 +429,8 @@ void perform()
 {
 	static uint8_t layer = 0;
 	uint32_t addr = FRAME_BUFFER;
+
+	showLayer(0);
 
 	if(0 == layer)
 	{
