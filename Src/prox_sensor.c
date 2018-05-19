@@ -33,7 +33,7 @@ void ProxSensor_Init(uint32_t frameBufferAddr)
 	ProxSensor_Config.halfScreenMode = 0;
 	ProxSensor_Config.detectedColor  = ProxSensor_Color_R;
 
-	ProxSensor_Config.minNumberOfPixels = 25;
+	ProxSensor_Config.minNumberOfPixels = 15;
 
 	ProxSensor_Config.BwTh_low_HSV_H = 131;
 	ProxSensor_Config.BwTh_up_HSV_H  = 168;
@@ -286,7 +286,7 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 
 		/* Put text info in bounding box. */
 		memset(osdStr, 0, strlen(osdStr));
-		sprintf(osdStr, "Area: %ld", maxArea);
+		sprintf(osdStr, "Width: %ld", maxArea);
 		LCD_putString( 10, 10, (uint8_t *) osdStr, 0 );
 
 		/* Put text info in bounding box. */

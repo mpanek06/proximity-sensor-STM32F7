@@ -9,8 +9,8 @@
 #define CONFIG_H_
 
 //#define CAM_R_VGA
-#define CAM_R_QVGA
-//#define CAM_R_QQVGA
+//#define CAM_R_QVGA
+#define CAM_R_QQVGA
 
 #ifdef CAM_R_QQVGA
 	#define CAM_IMG_WIDTH  ((uint16_t)160)
@@ -43,9 +43,20 @@
 #define OBJ_SIZE_AT_20_DIST     4700
 #define OBJ_SIZE_AT_30_DIST     2000
 
-#define DIST_CALC_D            200
-#define DIST_CALC_P            660
+/*W - known width*/
 #define DIST_CALC_W            40
+/*D - distance from  camera*/
+#define DIST_CALC_D            200
+/*P - width in pixels*/
+
+#ifdef CAM_R_QQVGA
+	#define DIST_CALC_P            30
+#elif defined CAM_R_QVGA
+	#define DIST_CALC_P            66
+#elif defined CAM_R_VGA
+	#define DIST_CALC_P            122
+#endif
+
 #define DIST_CALC_F            ( ( DIST_CALC_P * DIST_CALC_D ) / DIST_CALC_W )
 #define PROX_PIXEL_TH          1
 
