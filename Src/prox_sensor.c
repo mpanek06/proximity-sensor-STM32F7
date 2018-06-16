@@ -113,10 +113,70 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 		rgbColor.g = RGB565_GET_G(pixel);
 		rgbColor.b = RGB565_GET_B(pixel);
 
-		convertRGB2HSV(&rgbColor, &hsvColor);
+		uint8_t  hsv_cmin  = 0;
+		uint8_t  hsv_cmax  = 0;
+		uint8_t  hsv_delta = 0;
+
+		/* Convert current pixel into HSV */
+
+		hsv_cmax  = MAX(rgbColor.r, MAX(rgbColor.g, rgbColor.b));
+		hsv_cmin  = MIN(rgbColor.r, MIN(rgbColor.g, rgbColor.b));
+		hsv_delta = hsv_cmax - hsv_cmin;
+
+		/* Calculate V value of HSV */
+		hsvColor.v = hsv_cmax;
+
+		if( 0 == hsv_cmax )
+		{
+			hsvColor.h = 0;
+			hsvColor.s = 0;
+			return;
+		}
+
+		/* Calculate S value of HSV */
+		hsvColor.s = 255 * hsv_delta / hsv_cmax;
+
+		if( 0 == hsvColor.s )
+		{
+			hsvColor.h = 0;
+		}
+		else
+		{
+
+			/* Calculate H value of HSV */
+			if( 0 == hsv_delta )
+			{
+				hsvColor.h = 0;
+			}
+			else if( hsv_cmax == rgbColor.r )
+			{
+				hsvColor.h =   0 + 43 * (rgbColor.g - rgbColor.b) / hsv_delta;
+			}
+			else if( hsv_cmax == rgbColor.g )
+			{
+				hsvColor.h =  85 + 43 * (rgbColor.b - rgbColor.r) / hsv_delta;
+			}
+			else if( hsv_cmax == rgbColor.b )
+			{
+				hsvColor.h = 171 + 43 * (rgbColor.r - rgbColor.g) / hsv_delta;
+			}
+			else
+			{
+				hsvColor.h = 0;
+			}
+		}
 
 		/* Check if pixel color is within desired range */
-		if (isPixelInRange(&hsvColor))
+		if (
+				hsvColor.h >= ProxSensor_Config.BwTh_low_HSV_H
+				&& hsvColor.s >= ProxSensor_Config.BwTh_low_HSV_S
+				&& hsvColor.v >= ProxSensor_Config.BwTh_low_HSV_V
+
+				&& hsvColor.h <= ProxSensor_Config.BwTh_up_HSV_H
+				&& hsvColor.s <= ProxSensor_Config.BwTh_up_HSV_S
+				&& hsvColor.v <= ProxSensor_Config.BwTh_up_HSV_V
+
+		)
 		{
 			*ptr = COLOR_WHITE;
 		}
@@ -235,7 +295,7 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 				/* If number of pixels with given label is smaller
 				 * than threshold value, this pixel has to be set to
 				 * black color. */
-				if( !isLabelValid(label) )
+				if( !(labelsInfoArray[i].numberOfPixels >= ProxSensor_Config.minNumberOfPixels))
 				{
 					ImgPtr[y][x] = COLOR_BLACK;
 				}
@@ -247,7 +307,7 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 	/* Find biggest object detected on the image. */
 	for(uint16_t i = 1; i <= currentHighestLabel; ++i )
 	{
-		if(isLabelValid(i))
+		if(labelsInfoArray[i].numberOfPixels >= ProxSensor_Config.minNumberOfPixels)
 		{
 			bBox.x_min = labelsInfoArray[i].x_min;
 			bBox.x_max = labelsInfoArray[i].x_max;

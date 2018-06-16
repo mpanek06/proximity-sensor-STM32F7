@@ -8,8 +8,8 @@
 #ifndef CONFIG_H_
 #define CONFIG_H_
 
-//#define CAM_R_VGA
-#define CAM_R_QVGA
+#define CAM_R_VGA
+//#define CAM_R_QVGA
 //#define CAM_R_QQVGA
 
 #ifdef CAM_R_QQVGA
