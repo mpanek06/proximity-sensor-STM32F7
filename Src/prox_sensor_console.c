@@ -360,9 +360,18 @@ void ProxSensor_Console_SendImgUSB( char* arg )
 {
 	sendStringOnUSBPort(imgFrameStartSeq, strlen(imgFrameStartSeq));
 
+#ifdef CAM_R_QQVGA
+
+#elif defined CAM_R_QVGA
 	sendStringOnUSBPort((const char *) FRAME_BUFFER, 0xffff);
 	sendStringOnUSBPort((const char *) (FRAME_BUFFER + 1 * 0xffff), 0xffff);
 	sendStringOnUSBPort((const char *) (FRAME_BUFFER + 2 * 0xffff), 22528);
+#elif defined CAM_R_VGA
+	sendStringOnUSBPort((const char *) FRAME_BUFFER, 0xffff);
+	sendStringOnUSBPort((const char *) (FRAME_BUFFER + 1 * 0xffff), 0xffff);
+	sendStringOnUSBPort((const char *) (FRAME_BUFFER + 2 * 0xffff), 0xffff);
+	sendStringOnUSBPort((const char *) (FRAME_BUFFER + 3 * 0xffff), 64514);
+#endif
 
 	sendStringOnUSBPort(imgFrameStopSeq, strlen(imgFrameStopSeq));
 }
