@@ -80,12 +80,12 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 
 	uint16_t currentHighestLabel = 0;
 	uint16_t label               = 0;
-	uint32_t i                   = 0;
+//	uint32_t i                   = 0;
 	uint16_t x                   = 0;
 	uint16_t y                   = 0;
 
-	uint16_t *ptr                = (uint16_t*) frameBufferAddr;
-	uint16_t pixel               = 0;
+//	uint16_t *ptr                = (uint16_t*) frameBufferAddr;
+//	uint16_t pixel               = 0;
 
 	uint32_t area                = 0;
 	uint32_t maxArea             = 0;
@@ -98,41 +98,46 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 	memset(labelsArray, 0, sizeof(labelsArray));
 	memset(labelsInfoArray, 0, sizeof(labelsInfoArray));
 
+	ImgPtr = frameBufferAddr;
+
 	/* This loop is responsible for transforming image to graysacle,
 	 * calculating image difference (between color layer and grayscale layer
 	 * and performing binarization */
-	for( i=0; i < CAM_IMG_SIZE; ++i, ++ptr)
+	for( y=0; y < CAM_IMG_HEIGHT; ++y)
+	{
+		for( x=0; x < CAM_IMG_WIDTH; ++x)
 	{
 		/* Store value of current pixel so there
 		 * is no need to get it from SDRAM
 		 * every time it is needed */
-		pixel = *ptr;
+//		pixel = *ptr;
+//		frameBufferAddr[y][x]
 
 		/* Get values of RGB colors for current pixel */
-		rgbColor.r = RGB565_GET_R(pixel);
-		rgbColor.g = RGB565_GET_G(pixel);
-		rgbColor.b = RGB565_GET_B(pixel);
+		rgbColor.r = RGB565_GET_R(ImgPtr[y][x]);
+		rgbColor.g = RGB565_GET_G(ImgPtr[y][x]);
+		rgbColor.b = RGB565_GET_B(ImgPtr[y][x]);
 
 		convertRGB2HSV(&rgbColor, &hsvColor);
 
 		/* Check if pixel color is within desired range */
 		if (isPixelInRange(&hsvColor))
 		{
-			*ptr = COLOR_WHITE;
+			ImgPtr[y][x] = COLOR_WHITE;
 		}
 		else
 		{
-			*ptr = COLOR_BLACK;
+			ImgPtr[y][x] = COLOR_BLACK;
 		}
 
 		/* Perform labeling if it is turned on in config*/
-		if( ProxSensor_Config.labelingActive && *ptr != COLOR_BLACK )
+		if( ProxSensor_Config.labelingActive && ImgPtr[y][x] != COLOR_BLACK )
 		{
 			/* Since we move around the frame by incrementing the value of ptr
 			 * we need to calculate value of x, y coordinates in order to be able to
 			 * check value of neighbors values */
-			y = i / CAM_IMG_WIDTH;
-			x = i - ( y * CAM_IMG_WIDTH );
+//			y = i / CAM_IMG_WIDTH;
+//			x = i - ( y * CAM_IMG_WIDTH );
 
 			/* If pixel to the North and to the West are labeled but with different labels
 			 * they need to be merged as they belong to the same object, */
@@ -217,6 +222,7 @@ void performOperationsOnFrame_HSV(uint32_t frameBufferAddr)
 			}
 
 		} /* END OF LABELING */
+	}
 	}
 
 	if(ProxSensor_Config.labelingActive && ProxSensor_Config.removingSmallObjectsActive)
