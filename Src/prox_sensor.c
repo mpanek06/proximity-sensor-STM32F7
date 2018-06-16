@@ -334,15 +334,29 @@ static inline uint8_t isLabelValid(uint16_t labelNumber)
 
 static inline void convertRGB2HSV(ProxSensor_RGB_Color_T *rgbColor, ProxSensor_HSV_Color_T *hsvColor)
 {
-	uint8_t  hsv_cmin  = 0;
-	uint8_t  hsv_cmax  = 0;
-	uint8_t  hsv_delta = 0;
+	float    hsv_h               = 0;
+	float    hsv_s               = 0;
+	float    hsv_v               = 0;
+
+	float    hsv_r_normed        = 0;
+	float    hsv_g_normed        = 0;
+	float    hsv_b_normed        = 0;
+
+	float    hsv_cmin            = 0;
+	float    hsv_cmax            = 0;
+	float    hsv_delta = 0;
 
 	/* Convert current pixel into HSV */
 
-	hsv_cmax  = MAX(rgbColor->r, MAX(rgbColor->g, rgbColor->b));
-	hsv_cmin  = MIN(rgbColor->r, MIN(rgbColor->g, rgbColor->b));
+	hsv_r_normed = (float) rgbColor->r / 255;
+	hsv_g_normed = (float) rgbColor->g / 255;
+	hsv_b_normed = (float) rgbColor->b / 255;
+
+	hsv_cmax  = MAX(hsv_r_normed, MAX(hsv_g_normed, hsv_b_normed));
+	hsv_cmin  = MIN(hsv_r_normed, MIN(hsv_g_normed, hsv_b_normed));
 	hsv_delta = hsv_cmax - hsv_cmin;
+
+	uint16_t fraction = 0;
 
 	/* Calculate V value of HSV */
 	hsvColor->v = hsv_cmax;
@@ -357,31 +371,43 @@ static inline void convertRGB2HSV(ProxSensor_RGB_Color_T *rgbColor, ProxSensor_H
 	/* Calculate S value of HSV */
 	hsvColor->s = 255 * hsv_delta / hsv_cmax;
 
-	if( 0 == hsvColor->s )
-	{
-		hsvColor->h = 0;
-		return;
-	}
-
-	/* Calculate H value of HSV */
 	if( 0 == hsv_delta )
 	{
-		hsvColor->h = 0;
+		hsv_h = 0;
 	}
-	else if( hsv_cmax == rgbColor->r )
+	else if( hsv_cmax == hsv_r_normed )
 	{
-		hsvColor->h =   0 + 43 * (rgbColor->g - rgbColor->b) / hsv_delta;
+		fraction = (hsv_g_normed - hsv_b_normed) / hsv_delta;
+		hsv_h = 60 * ( fraction % 6 );
 	}
-	else if( hsv_cmax == rgbColor->g )
+	else if( hsv_cmax == hsv_g_normed )
 	{
-		hsvColor->h =  85 + 43 * (rgbColor->b - rgbColor->r) / hsv_delta;
+		hsv_h = 60 * ( ( (hsv_b_normed - hsv_r_normed) / hsv_delta ) + 2 );
 	}
-	else if( hsv_cmax == rgbColor->b )
+	else if( hsv_cmax == hsv_b_normed )
 	{
-		hsvColor->h = 171 + 43 * (rgbColor->r - rgbColor->g) / hsv_delta;
+		hsv_h = 60 * ( ( (hsv_r_normed - hsv_g_normed) / hsv_delta ) + 4 );
 	}
 	else
 	{
-		hsvColor->h = 0;
+		hsv_h = 0;
 	}
+
+	/* Calculate S value of HSV */
+	if( 0 != hsv_cmax )
+	{
+		hsv_s = hsv_delta / hsv_cmax;
+	}
+	else
+	{
+		hsv_s = 0;
+	}
+
+	/* Calculate V value of HSV */
+	hsv_v = hsv_cmax;
+
+	hsvColor->h = hsv_h;
+	hsvColor->s = hsv_s * 255;
+	hsvColor->v = hsv_v * 255;
+
 }

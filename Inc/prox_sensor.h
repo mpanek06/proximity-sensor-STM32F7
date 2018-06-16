@@ -71,13 +71,13 @@ typedef struct
 	uint16_t minNumberOfPixels;
 
 	/* Threshold for image binarization in HSV cases. */
-	uint8_t BwTh_low_HSV_H;
-	uint8_t BwTh_low_HSV_S;
-	uint8_t BwTh_low_HSV_V;
+	float BwTh_low_HSV_H;
+	float BwTh_low_HSV_S;
+	float BwTh_low_HSV_V;
 
-	uint8_t BwTh_up_HSV_S;
-	uint8_t BwTh_up_HSV_H;
-	uint8_t BwTh_up_HSV_V;
+	float BwTh_up_HSV_S;
+	float BwTh_up_HSV_H;
+	float BwTh_up_HSV_V;
 }ProxSensor_Config_T;
 
 typedef struct
